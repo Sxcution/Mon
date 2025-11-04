@@ -140,30 +140,6 @@
         </div>
     </div>
 </div>
-<!-- MXH Background Context Menu - Will be moved to body by JS -->
-<div id="mxh-background-context-menu" class="custom-context-menu" aria-hidden="true">
-    <div class="menu-item has-submenu" data-action="view-filter">
-        <span><i class="bi bi-eye me-2"></i>Xem</span>
-        <div class="submenu">
-            <div class="menu-item" data-action="view-default">
-                <span id="view-default-check">✓ </span>Mặc định
-            </div>
-            <div class="menu-item" data-action="view-card2">
-                <span id="view-card2-check"></span>Card 2
-            </div>
-            <div class="menu-item" data-action="view-card3">
-                <span id="view-card3-check"></span>Card 3
-            </div>
-        </div>
-    </div>
-    <div class="menu-item" data-action="view-mode">
-        <i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem
-    </div>
-    <div class="menu-item" data-action="add-account">
-        <i class="bi bi-plus-lg me-2"></i>+ Thêm Tài Khoản MXH
-    </div>
-</div>
-
 <!-- WeChat Account Modal -->
 <div class="modal fade" id="wechat-account-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
@@ -502,84 +478,6 @@
         display: block !important;
     }
 
-    /* 🔍 Background Context Menu Styles - BULLETPROOF VERSION */
-    .custom-context-menu {
-        position: fixed !important;
-        z-index: 2147483647 !important; /* Maximum z-index */
-        background: #2c3340 !important;
-        border: 1px solid #444a59 !important;
-        border-radius: 8px !important;
-        padding: 4px !important;
-        min-width: 200px !important;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-        
-        /* Use visibility/opacity instead of display to avoid override issues */
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.08s linear;
-    }
-
-    .custom-context-menu.is-open {
-        visibility: visible;
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .custom-context-menu .menu-item {
-        padding: 8px 12px;
-        color: #e6e6e6;
-        cursor: pointer;
-        border-radius: 4px;
-        transition: background 0.2s;
-        position: relative;
-        white-space: nowrap;
-    }
-
-    .custom-context-menu .menu-item:hover {
-        background: rgba(0, 224, 255, 0.15);
-        color: #00e0ff;
-    }
-
-    .custom-context-menu .menu-item.has-submenu>span::after {
-        content: '▶';
-        float: right;
-        margin-left: 12px;
-        font-size: 0.8em;
-        opacity: 0.6;
-    }
-
-    .custom-context-menu .submenu {
-        position: absolute;
-        left: calc(100% - 2px);
-        top: -4px;
-        margin-left: 0;
-        display: block; /* Always block, control via opacity */
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-        background: #2c3340;
-        border: 1px solid #444a59;
-        border-radius: 8px;
-        padding: 4px;
-        min-width: 180px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        z-index: 2147483646;
-        transition: opacity 0.08s linear;
-    }
-
-    .custom-context-menu .menu-item.has-submenu:hover>.submenu,
-    .custom-context-menu .submenu:hover {
-        visibility: visible;
-        opacity: 1;
-        pointer-events: auto;
-    }
-
-    .custom-context-menu .submenu .menu-item {
-        padding: 6px 10px;
-        font-size: 0.9em;
-    }
-
     /* ========================================
    BORDER COLORS (Viền Card)
    ======================================== */
@@ -824,7 +722,6 @@
     let pendingUpdates = false;
     let activeGroupId = null;
     let activeFilter = 'default'; // THÊM DÒNG NÀY
-    let activeViewFilter = 'default'; // 🔍 View filter: 'default', 'card2', 'card3'
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
@@ -1725,39 +1622,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 const noticeObj = ensureNoticeParsed(acc.notice);
                 // Lọc những card CÓ notice và notice đó ĐANG BẬT
                 return (noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
-            });
-        }
-
-        // 🔍 APPLY VIEW FILTER (card2, card3) - Filter by account index on card
-        if (activeViewFilter === 'card2' || activeViewFilter === 'card3') {
-            const targetIndex = activeViewFilter === 'card2' ? 2 : 3; // Account position 2 or 3
-            
-            // Group accounts by card_id first
-            const cardGroupsTemp = {};
-            processedAccounts.forEach(acc => {
-                if (!cardGroupsTemp[acc.card_id]) {
-                    cardGroupsTemp[acc.card_id] = [];
-                }
-                cardGroupsTemp[acc.card_id].push(acc);
-            });
-            
-            // Sort accounts within each card (primary first)
-            Object.values(cardGroupsTemp).forEach(accounts => {
-                accounts.sort((a, b) => {
-                    if (a.is_primary && !b.is_primary) return -1;
-                    if (!a.is_primary && b.is_primary) return 1;
-                    return a.id - b.id;
-                });
-            });
-            
-            // Only keep accounts at targetIndex position (1-based)
-            processedAccounts = [];
-            Object.entries(cardGroupsTemp).forEach(([cardId, accounts]) => {
-                if (accounts.length >= targetIndex) {
-                    // Card has account at this position, show only that account
-                    processedAccounts.push(accounts[targetIndex - 1]);
-                }
-                // If card doesn't have account at this position, skip the card entirely
             });
         }
 
@@ -3497,113 +3361,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             await loadMXHData(false); // Reload to get correct data
         }
     };
-
-    // ===== MXH BACKGROUND CONTEXT MENU - BULLETPROOF VERSION =====
-    (function() {
-        const menu = document.getElementById('mxh-background-context-menu');
-        const root = document.getElementById('mxh-accounts-container');
-        
-        // 🔍 Move menu to body to escape any parent constraints
-        if (menu && menu.parentElement !== document.body) {
-            document.body.appendChild(menu);
-        }
-        
-        function openMenu(x, y) {
-            // Use clientX/Y with position:fixed for viewport-relative positioning
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            
-            // Set initial position to measure
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            
-            // Make visible temporarily to measure
-            menu.classList.add('is-open');
-            
-            // Adjust if overflows viewport
-            const rect = menu.getBoundingClientRect();
-            const finalX = Math.min(x, vw - rect.width - 4);
-            const finalY = Math.min(y, vh - rect.height - 4);
-            
-            menu.style.left = Math.max(4, finalX) + 'px';
-            menu.style.top = Math.max(4, finalY) + 'px';
-            
-            menu.classList.add('is-open');
-            menu.setAttribute('aria-hidden', 'false');
-        }
-        
-        function closeMenu() {
-            menu.classList.remove('is-open');
-            menu.setAttribute('aria-hidden', 'true');
-        }
-        
-        // Right-click on background (not on cards)
-        root.addEventListener('contextmenu', function(event) {
-            const clickedCard = event.target.closest('.card');
-            const clickedOnContainer = event.target.id === 'mxh-accounts-container';
-            const clickedOnRow = event.target.classList.contains('row');
-            
-            if (!clickedCard && (clickedOnContainer || clickedOnRow)) {
-                event.preventDefault();
-                openMenu(event.clientX, event.clientY); // Use clientX/Y for fixed positioning
-            }
-        });
-        
-        // Close on click outside / ESC / scroll / resize
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) closeMenu();
-        }, true);
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeMenu();
-        });
-        
-        window.addEventListener('scroll', closeMenu, true);
-        window.addEventListener('resize', closeMenu, true);
-        
-        // Prevent context menu on the menu itself
-        menu.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-    })();
-
-    // Handle background context menu actions
-    document.getElementById('mxh-background-context-menu').addEventListener('click', function (event) {
-        const action = event.target.closest('.menu-item')?.dataset.action;
-        const menu = this;
-
-        if (action === 'view-default' || action === 'view-card2' || action === 'view-card3') {
-            // 🔍 Update view filter
-            const newFilter = action.replace('view-', '');
-            activeViewFilter = newFilter;
-            
-            // Update checkmarks
-            document.getElementById('view-default-check').textContent = newFilter === 'default' ? '✓ ' : '';
-            document.getElementById('view-card2-check').textContent = newFilter === 'card2' ? '✓ ' : '';
-            document.getElementById('view-card3-check').textContent = newFilter === 'card3' ? '✓ ' : '';
-            
-            // Re-render with new filter
-            scheduleRender();
-            
-            // Close menu using class
-            menu.classList.remove('is-open');
-            menu.setAttribute('aria-hidden', 'true');
-        } else if (action === 'view-mode') {
-            // Open view mode modal
-            const modal = new bootstrap.Modal(document.getElementById('mxh-view-mode-modal'));
-            modal.show();
-            // Close menu
-            menu.classList.remove('is-open');
-            menu.setAttribute('aria-hidden', 'true');
-        } else if (action === 'add-account') {
-            // Open add account modal
-            const modal = new bootstrap.Modal(document.getElementById('mxh-addAccountModal'));
-            modal.show();
-            // Close menu
-            menu.classList.remove('is-open');
-            menu.setAttribute('aria-hidden', 'true');
-        }
-    });
 
     // Hide all context menus on regular click
     document.addEventListener('click', function (event) {
