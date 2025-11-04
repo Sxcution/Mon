@@ -693,6 +693,30 @@
     }
 </style>
 
+<!-- MXH Background Context Menu -->
+<div id="mxh-background-context-menu" class="mxh-context-menu" style="display: none;">
+        <div class="mxh-menu-item has-submenu" data-action="view-filter">
+            <span><i class="bi bi-eye me-2"></i>Xem</span>
+            <div class="mxh-submenu">
+                <div class="mxh-menu-item" data-action="view-default">
+                    <span id="view-default-check">✓ </span>Mặc định
+                </div>
+                <div class="mxh-menu-item" data-action="view-card2">
+                    <span id="view-card2-check"></span>Card 2
+                </div>
+                <div class="mxh-menu-item" data-action="view-card3">
+                    <span id="view-card3-check"></span>Card 3
+                </div>
+            </div>
+        </div>
+        <div class="mxh-menu-item" data-action="view-mode">
+            <i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem
+        </div>
+        <div class="mxh-menu-item" data-action="add-account">
+            <i class="bi bi-plus-lg me-2"></i>+ Thêm Tài Khoản MXH
+        </div>
+</div>
+
 <script>
     // ===== MXH REAL-TIME CONFIGURATION =====
     const MXH_CONFIG = {
@@ -722,6 +746,7 @@
     let pendingUpdates = false;
     let activeGroupId = null;
     let activeFilter = 'default'; // THÊM DÒNG NÀY
+    let activeViewFilter = 'default'; // 🔍 Thêm biến này để lưu bộ lọc "Xem"
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
@@ -1618,6 +1643,41 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 return (noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
             });
         }
+
+        // ===== ⬇️ THÊM CODE MỚI TẠI ĐÂY ⬇️ =====
+        // 🔍 LỌC XEM (CARD 2 / CARD 3)
+        if (activeViewFilter === 'card2' || activeViewFilter === 'card3') {
+            const targetIndex = activeViewFilter === 'card2' ? 2 : 3; // Vị trí tài khoản (2 hoặc 3)
+            
+            // 1. Nhóm các tài khoản theo card_id
+            const cardGroupsTemp = {};
+            processedAccounts.forEach(acc => {
+                if (!cardGroupsTemp[acc.card_id]) {
+                    cardGroupsTemp[acc.card_id] = [];
+                }
+                cardGroupsTemp[acc.card_id].push(acc);
+            });
+            
+            // 2. Sắp xếp tài khoản trong mỗi card (primary trước)
+            Object.values(cardGroupsTemp).forEach(accounts => {
+                accounts.sort((a, b) => {
+                    if (a.is_primary && !b.is_primary) return -1;
+                    if (!a.is_primary && b.is_primary) return 1;
+                    return a.id - b.id;
+                });
+            });
+            
+            // 3. Lọc lại 'processedAccounts': chỉ giữ lại tài khoản ở vị trí targetIndex
+            processedAccounts = [];
+            Object.entries(cardGroupsTemp).forEach(([cardId, accounts]) => {
+                if (accounts.length >= targetIndex) {
+                    // Nếu card có đủ tài khoản, chỉ lấy tài khoản ở vị trí thứ 2 (index 1) hoặc thứ 3 (index 2)
+                    processedAccounts.push(accounts[targetIndex - 1]);
+                }
+                // Nếu card không có đủ tài khoản, nó sẽ bị loại bỏ (không push)
+            });
+        }
+        // ===== ⬆️ KẾT THÚC CODE MỚI ⬆️ =====
 
         if (processedAccounts.length === 0) {
             let emptyMessage = 'Chưa có tài khoản MXH nào';
@@ -3045,6 +3105,76 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
         // ===== THÊM VÀO ĐẾN ĐÂY =====
 
+        // ===== MXH BACKGROUND CONTEXT MENU (Click chuột phải vào nền) =====
+        document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function (event) {
+            // Chỉ hiển thị nếu KHÔNG click vào card
+            const clickedCard = event.target.closest('.card');
+            const clickedOnContainer = event.target.id === 'mxh-accounts-container';
+            const clickedOnRow = event.target.classList.contains('row');
+            
+            if (!clickedCard && (clickedOnContainer || clickedOnRow)) {
+                event.preventDefault();
+
+                // Ẩn tất cả context menu khác
+                const existingMenu = document.getElementById('card-context-menu');
+                if (existingMenu) existingMenu.remove();
+
+                // Hiển thị background context menu
+                const contextMenu = document.getElementById('mxh-background-context-menu');
+                
+                // 🔍 Cập nhật trạng thái dấu check (✓)
+                document.getElementById('view-default-check').textContent = activeViewFilter === 'default' ? '✓ ' : '';
+                document.getElementById('view-card2-check').textContent = activeViewFilter === 'card2' ? '✓ ' : '';
+                document.getElementById('view-card3-check').textContent = activeViewFilter === 'card3' ? '✓ ' : '';
+
+                // Hiển thị và định vị menu thông minh
+                positionContextMenuSmart(contextMenu, event.clientX, event.clientY);
+                setTimeout(() => positionAllSubmenusForMenu(contextMenu), 50);
+
+                 // Thêm click handler để ẩn menu
+                setTimeout(() => {
+                    document.addEventListener('click', hideBackgroundContextMenu, { once: true });
+                }, 100);
+            }
+        });
+        
+        function hideBackgroundContextMenu() {
+            const menu = document.getElementById('mxh-background-context-menu');
+            if (menu) menu.style.display = 'none';
+        }
+
+        // ===== XỬ LÝ CLICK CHO BACKGROUND CONTEXT MENU =====
+        document.getElementById('mxh-background-context-menu').addEventListener('click', function (event) {
+            const action = event.target.closest('.mxh-menu-item')?.dataset.action;
+
+            if (action === 'view-default' || action === 'view-card2' || action === 'view-card3') {
+                // 🔍 Cập nhật bộ lọc "Xem"
+                const newFilter = action.replace('view-', '');
+                activeViewFilter = newFilter;
+                
+                // Cập nhật dấu check
+                document.getElementById('view-default-check').textContent = newFilter === 'default' ? '✓ ' : '';
+                document.getElementById('view-card2-check').textContent = newFilter === 'card2' ? '✓ ' : '';
+                document.getElementById('view-card3-check').textContent = newFilter === 'card3' ? '✓ ' : '';
+                
+                // Render lại danh sách card
+                scheduleRender();
+                
+            } else if (action === 'view-mode') {
+                // Mở modal Chế Độ Xem
+                const modal = new bootstrap.Modal(document.getElementById('mxh-view-mode-modal'));
+                modal.show();
+                
+            } else if (action === 'add-account') {
+                // Mở modal Thêm Tài Khoản
+                const modal = new bootstrap.Modal(document.getElementById('mxh-addAccountModal'));
+                modal.show();
+            }
+
+            // Luôn ẩn menu sau khi click
+            hideBackgroundContextMenu();
+        });
+
         // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
     });
 
@@ -3356,83 +3486,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
     };
 
-    // Hide all context menus on regular click
-    document.addEventListener('click', function (event) {
-        // Don't hide if clicking inside a context menu
-        if (!event.target.closest('.custom-context-menu')) {
-            document.querySelectorAll('.custom-context-menu').forEach(menu => {
-                menu.style.display = 'none';
-            });
-
-            // Hide all submenus and clear state
-            document.querySelectorAll('.submenu').forEach(submenu => {
-                submenu.classList.remove('show');
-            });
-            currentSubmenu = null;
-            if (hideTimeout) {
-                clearTimeout(hideTimeout);
-                hideTimeout = null;
-            }
-        }
-    });
-
-    // ===== SMART SUBMENU POSITIONING =====
-    // Function to position submenu smartly
-    function positionSubmenu(menuItem) {
-        const submenu = menuItem.querySelector('.submenu');
-        if (!submenu) return;
-
-        // Temporarily show submenu to measure it
-        submenu.style.display = 'block';
-        submenu.style.visibility = 'hidden';
-
-        const submenuRect = submenu.getBoundingClientRect();
-        const parentMenu = menuItem.closest('.custom-context-menu');
-        const parentMenuRect = parentMenu.getBoundingClientRect();
-        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-        const margin = 8;
-
-        // Calculate where submenu would appear if positioned normally (right side)
-        const normalSubmenuRight = parentMenuRect.right + submenuRect.width;
-
-        // Check if submenu would overflow right side of viewport
-        if (normalSubmenuRight > viewportWidth - margin) {
-            // Show submenu on the left side
-            submenu.classList.add('submenu-left');
-            // console.log('Submenu positioned LEFT - would overflow right');
-        } else {
-            // Show submenu on the right side (default)
-            submenu.classList.remove('submenu-left');
-            // console.log('Submenu positioned RIGHT - fits in viewport');
-        }
-
-        // Hide submenu again (CSS hover will show it)
-        submenu.style.display = '';
-        submenu.style.visibility = '';
-    }
-
-    // Enhanced submenu hover handling with bridge support
-    let currentSubmenu = null;
-    let hideTimeout = null;
-
-    // Function to create bridge element
-    function createSubmenuBridge(submenu, isLeft = false) {
-        // Remove existing bridge
-        const existingBridge = submenu.querySelector('.submenu-bridge');
-        if (existingBridge) {
-            existingBridge.remove();
-        }
-
-        // Create new bridge
-        const bridge = document.createElement('div');
-        bridge.className = 'submenu-bridge';
-        if (isLeft) {
-            bridge.style.left = '-5px';
-            bridge.style.right = 'auto';
-        }
-        submenu.appendChild(bridge);
-        return bridge;
-    }
 
     // Function to show submenu
     function showSubmenu(menuItem) {
