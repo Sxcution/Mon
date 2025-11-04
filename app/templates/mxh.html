@@ -3109,10 +3109,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function (event) {
             // Chỉ hiển thị nếu KHÔNG click vào card
             const clickedCard = event.target.closest('.card');
-            const clickedOnContainer = event.target.id === 'mxh-accounts-container';
-            const clickedOnRow = event.target.classList.contains('row');
             
-            if (!clickedCard && (clickedOnContainer || clickedOnRow)) {
+            if (!clickedCard) {
                 event.preventDefault();
                 event.stopPropagation(); // <--- NGĂN EVENT NỔI BỌT LÊN DOCUMENT
 

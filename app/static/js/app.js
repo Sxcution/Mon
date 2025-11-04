@@ -1578,15 +1578,6 @@ document.addEventListener('DOMContentLoaded', function () {
           menu.style.top = y + 'px';
         }
 
-        // Dashboard-wide context menu (outside tab panes)
-        document.addEventListener('contextmenu', function (e) {
-                  // Logic cũ bị xóa. Menu này giờ là mặc định.
-                  // Các menu cụ thể hơn sẽ dùng e.stopPropagation() để ngăn menu này hiện ra.
-                  hideMenus();
-                  showMenu(dashboardMenu, e.clientX, e.clientY);
-                  e.preventDefault();
-            });
-
         // Telegram tab context menu
         if (telegramPane) {
           telegramPane.addEventListener('contextmenu', function(e) {
