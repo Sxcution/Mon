@@ -287,3 +287,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* === Kết thúc Kích hoạt Smart Token === */
 
+/* === GLOBAL CONTEXT MENU HELPERS === */
+
+/**
+ * Tính toán vị trí menu (lật thông minh) sao cho không tràn màn hình.
+ * @param {HTMLElement} menu - Phần tử DOM của menu.
+ * @param {number} x - Tọa độ X của chuột.
+ * @param {number} y - Tọa độ Y của chuột.
+ */
+function positionContextMenuSmart(menu, x, y) {
+    if (!menu) return;
+
+    // Tạm bật kiểu "có mặt trên DOM" để đo kích thước thực
+    const prevVis = menu.style.visibility;
+    const prevDisp = menu.style.display;
+    menu.style.visibility = 'hidden';
+    menu.style.display = 'block';
+
+    const rect = menu.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const MARGIN = 8; // tránh dính sát chuột và mép màn hình
+
+    // Xem có đủ chỗ bên phải / bên dưới không
+    const placeRight = (x + rect.width + MARGIN <= vw);
+    const placeDown  = (y + rect.height + MARGIN <= vh);
+
+    // Nếu không đủ chỗ thì lật qua trái / lật lên trên
+    let left = placeRight ? (x + MARGIN) : (x - rect.width - MARGIN);
+    let top  = placeDown  ? (y + MARGIN) : (y - rect.height - MARGIN);
+
+    // Clamp để menu không chọc lọt ra ngoài khi quá sát mép
+    left = Math.min(Math.max(left, MARGIN), vw - rect.width - MARGIN);
+    top  = Math.min(Math.max(top , MARGIN), vh - rect.height - MARGIN);
+
+    // Ghi vị trí cuối
+    menu.style.left = left + 'px';
+    menu.style.top  = top  + 'px';
+
+    // Khôi phục trạng thái hiển thị trước đó
+    menu.style.visibility = prevVis || '';
+    menu.style.display = ''; // luôn clear inline display để .show hoạt động
+}
+
+/**
+ * Căn chỉnh các .submenu con bên trong menu sao cho không bay ra ngoài mép.
+ * @param {HTMLElement} menu - Phần tử DOM của menu cha.
+ */
+function positionAllSubmenusForMenu(menu) {
+    if (!menu) return;
+
+    const submenuItems = menu.querySelectorAll('.has-submenu');
+    submenuItems.forEach(item => {
+        const submenu = item.querySelector('.submenu');
+        if (!submenu) return;
+
+        // reset mặc định: submenu mở về bên phải, từ trên xuống
+        submenu.style.left = '100%';
+        submenu.style.right = 'auto';
+        submenu.style.top = '0';
+        submenu.style.bottom = 'auto';
+
+        const itemRect = item.getBoundingClientRect();
+        const submenuRect = submenu.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Nếu tràn phải -> bung sang trái
+        if (itemRect.right + submenuRect.width > vw) {
+            submenu.style.left = 'auto';
+            submenu.style.right = '100%';
+        }
+
+        // Nếu tràn dưới -> đính đáy lên trên (bung ngược lên)
+        if (itemRect.top + submenuRect.height > vh) {
+            submenu.style.top = 'auto';
+            submenu.style.bottom = '0';
+        }
+    });
+}
+
