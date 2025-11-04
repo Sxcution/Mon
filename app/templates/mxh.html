@@ -3114,6 +3114,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             
             if (!clickedCard && (clickedOnContainer || clickedOnRow)) {
                 event.preventDefault();
+                event.stopPropagation(); // <--- NGĂN EVENT NỔI BỌT LÊN DOCUMENT
 
                 // Ẩn tất cả context menu khác
                 const existingMenu = document.getElementById('card-context-menu');
@@ -3486,6 +3487,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
     };
 
+    // Submenu state variables
+    let currentSubmenu = null;
+    let hideTimeout = null;
 
     // Function to show submenu
     function showSubmenu(menuItem) {
