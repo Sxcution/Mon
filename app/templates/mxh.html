@@ -140,13 +140,27 @@
         </div>
     </div>
 </div>
-<!-- MXH Background Context Menu -->
-<div id="mxh-background-context-menu" class="custom-context-menu" style="display: none;">
+<!-- MXH Background Context Menu - Will be moved to body by JS -->
+<div id="mxh-background-context-menu" class="custom-context-menu" aria-hidden="true">
+    <div class="menu-item has-submenu" data-action="view-filter">
+        <span><i class="bi bi-eye me-2"></i>Xem</span>
+        <div class="submenu">
+            <div class="menu-item" data-action="view-default">
+                <span id="view-default-check">✓ </span>Mặc định
+            </div>
+            <div class="menu-item" data-action="view-card2">
+                <span id="view-card2-check"></span>Card 2
+            </div>
+            <div class="menu-item" data-action="view-card3">
+                <span id="view-card3-check"></span>Card 3
+            </div>
+        </div>
+    </div>
     <div class="menu-item" data-action="view-mode">
-        <i class="bi bi-grid-3x3-gap me-2"></i> Chế Độ Xem
+        <i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem
     </div>
     <div class="menu-item" data-action="add-account">
-        <i class="bi bi-plus-lg me-2"></i> + Thêm Tài Khoản MXH
+        <i class="bi bi-plus-lg me-2"></i>+ Thêm Tài Khoản MXH
     </div>
 </div>
 
@@ -488,6 +502,84 @@
         display: block !important;
     }
 
+    /* 🔍 Background Context Menu Styles - BULLETPROOF VERSION */
+    .custom-context-menu {
+        position: fixed !important;
+        z-index: 2147483647 !important; /* Maximum z-index */
+        background: #2c3340 !important;
+        border: 1px solid #444a59 !important;
+        border-radius: 8px !important;
+        padding: 4px !important;
+        min-width: 200px !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+        
+        /* Use visibility/opacity instead of display to avoid override issues */
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.08s linear;
+    }
+
+    .custom-context-menu.is-open {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .custom-context-menu .menu-item {
+        padding: 8px 12px;
+        color: #e6e6e6;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .custom-context-menu .menu-item:hover {
+        background: rgba(0, 224, 255, 0.15);
+        color: #00e0ff;
+    }
+
+    .custom-context-menu .menu-item.has-submenu>span::after {
+        content: '▶';
+        float: right;
+        margin-left: 12px;
+        font-size: 0.8em;
+        opacity: 0.6;
+    }
+
+    .custom-context-menu .submenu {
+        position: absolute;
+        left: calc(100% - 2px);
+        top: -4px;
+        margin-left: 0;
+        display: block; /* Always block, control via opacity */
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: #2c3340;
+        border: 1px solid #444a59;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 180px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 2147483646;
+        transition: opacity 0.08s linear;
+    }
+
+    .custom-context-menu .menu-item.has-submenu:hover>.submenu,
+    .custom-context-menu .submenu:hover {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .custom-context-menu .submenu .menu-item {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+
     /* ========================================
    BORDER COLORS (Viền Card)
    ======================================== */
@@ -732,6 +824,7 @@
     let pendingUpdates = false;
     let activeGroupId = null;
     let activeFilter = 'default'; // THÊM DÒNG NÀY
+    let activeViewFilter = 'default'; // 🔍 View filter: 'default', 'card2', 'card3'
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
@@ -1335,22 +1428,27 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
 
         if (account.wechat_last_scan_date) {
-            // Có lịch sử quét - kiểm tra thời gian chính xác
+            // 🔍 Có lịch sử quét - đếm ngược đến đầu tháng sau
             const lastScanDate = new Date(account.wechat_last_scan_date);
-            const hoursSinceScan = calculateTimeDifferenceInHours(lastScanDate, now);
-            const totalHoursWait = 30 * 24; // 30 ngày * 24 giờ
-            const remainingHours = Math.max(0, totalHoursWait - hoursSinceScan);
-
-            if (remainingHours > 0) {
-                // Còn thời gian chờ - hiển thị countdown (DISPLAY ONLY - keep original format)
-                const remainingDays = Math.floor(remainingHours / 24);
+            
+            // Tính đầu tháng sau của lastScanDate
+            const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+            const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+            
+            if (hoursUntilNextMonth > 0) {
+                // Còn thời gian chờ - hiển thị countdown
+                const remainingDays = Math.floor(hoursUntilNextMonth / 24);
+                const remainingHours = Math.floor(hoursUntilNextMonth % 24);
                 if (remainingDays > 0) {
                     return `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                } else if (remainingHours > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
                 } else {
-                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${Math.floor(remainingHours)}h)</small>`;
+                    // Đủ điều kiện quét tiếp - QR xanh
+                    return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
                 }
             } else {
-                // Đủ điều kiện quét tiếp - QR xanh
+                // Đủ điều kiện quét tiếp - QR xanh (đã sang tháng mới)
                 return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
             }
         } else {
@@ -1367,6 +1465,35 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 // Đủ điều kiện quét lần đầu - QR xanh
                 return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
             }
+        }
+    }
+
+    // 🔍 Helper function to check if WeChat account can scan (returns true/false)
+    function canScanWeChat(account) {
+        if (!account || account.platform !== 'wechat') return false;
+        
+        const now = new Date();
+        const currentScanCount = account.wechat_scan_count || 0;
+        const maxScans = 3;
+
+        // Đã hết lượt quét
+        if (currentScanCount >= maxScans) {
+            return false;
+        }
+
+        if (account.wechat_last_scan_date) {
+            // Đã quét, check xem đã sang tháng mới chưa
+            const lastScanDate = new Date(account.wechat_last_scan_date);
+            const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+            const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+            return hoursUntilNextMonth <= 0; // True nếu đã sang tháng mới
+        } else {
+            // Chưa quét lần nào, check tuổi 90 ngày
+            if (!account.wechat_created_year) return false;
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const minAgeHours = 90 * 24; // 90 ngày
+            return totalHours >= minAgeHours; // True nếu đã đủ 90 ngày
         }
     }
 
@@ -1460,8 +1587,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const isDisabled = account.status === 'disabled';
         if (isDisabled && platform === 'wechat') {
             let disableDays = 0;
-            if (account.die_date) {
-                const disableHours = Math.floor((now - new Date(account.die_date)) / (1000 * 60 * 60));
+            if (account.disabled_date) {
+                // 🔍 Parse disabled_date correctly (format: YYYY-MM-DD from backend)
+                const disabledDate = new Date(account.disabled_date + 'T00:00:00');
+                const disableHours = Math.floor((now - disabledDate) / (1000 * 60 * 60));
                 disableDays = Math.floor(disableHours / 24);
             }
             disabledInfo = `
@@ -1490,7 +1619,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                                         ${account.card_name}
                                     </h6>
                                     <i class="bi ${iconClass}" title="${platform}" style="font-size: 0.9rem; color: ${getPlatformColor(platform)};"></i>
-                                    ${totalAccounts > 1 ? `<span class="badge bg-secondary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
+                                    ${totalAccounts > 1 ? `<span class="badge bg-primary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
                                     ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
@@ -1577,11 +1706,11 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
 
                 if (acc.wechat_last_scan_date) {
-                    // Đã quét, check 30 ngày
+                    // 🔍 Đã quét, check xem đã sang tháng mới chưa
                     const lastScanDate = new Date(acc.wechat_last_scan_date);
-                    const hoursSinceScan = calculateTimeDifferenceInHours(lastScanDate, now);
-                    const totalHoursWait = 30 * 24; // 30 ngày
-                    return hoursSinceScan >= totalHoursWait; // True nếu đã đủ 30 ngày
+                    const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+                    const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+                    return hoursUntilNextMonth <= 0; // True nếu đã sang tháng mới (đủ điều kiện quét)
                 } else {
                     // Chưa quét lần nào, check tuổi 90 ngày
                     const createdDate = new Date(acc.wechat_created_year, (acc.wechat_created_month || 1) - 1, acc.wechat_created_day || 1);
@@ -1596,6 +1725,39 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 const noticeObj = ensureNoticeParsed(acc.notice);
                 // Lọc những card CÓ notice và notice đó ĐANG BẬT
                 return (noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
+            });
+        }
+
+        // 🔍 APPLY VIEW FILTER (card2, card3) - Filter by account index on card
+        if (activeViewFilter === 'card2' || activeViewFilter === 'card3') {
+            const targetIndex = activeViewFilter === 'card2' ? 2 : 3; // Account position 2 or 3
+            
+            // Group accounts by card_id first
+            const cardGroupsTemp = {};
+            processedAccounts.forEach(acc => {
+                if (!cardGroupsTemp[acc.card_id]) {
+                    cardGroupsTemp[acc.card_id] = [];
+                }
+                cardGroupsTemp[acc.card_id].push(acc);
+            });
+            
+            // Sort accounts within each card (primary first)
+            Object.values(cardGroupsTemp).forEach(accounts => {
+                accounts.sort((a, b) => {
+                    if (a.is_primary && !b.is_primary) return -1;
+                    if (!a.is_primary && b.is_primary) return 1;
+                    return a.id - b.id;
+                });
+            });
+            
+            // Only keep accounts at targetIndex position (1-based)
+            processedAccounts = [];
+            Object.entries(cardGroupsTemp).forEach(([cardId, accounts]) => {
+                if (accounts.length >= targetIndex) {
+                    // Card has account at this position, show only that account
+                    processedAccounts.push(accounts[targetIndex - 1]);
+                }
+                // If card doesn't have account at this position, skip the card entirely
             });
         }
 
@@ -1860,9 +2022,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         ${cardAccounts.map((acc, idx) => {
             const isActive = acc.id === state.activeAccountId;
             const isPrimary = acc.is_primary;
+            // 🔍 Check if this account can scan WeChat (green QR icon)
+            const canScan = platform === 'wechat' && canScanWeChat(acc);
+            const qrIcon = canScan ? '<i class="bi bi-qr-code" style="color: #07c160; margin-left: 4px;"></i>' : '';
             return `
                             <div class="mxh-menu-item" data-action="switch-account" data-account-id="${acc.id}">
-                                ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}
+                                ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}${qrIcon}
                             </div>
                         `;
         }).join('')}
@@ -2220,6 +2385,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     if (result === 'success') {
                         mxhAccounts[accountIndex].status = 'active';
                         mxhAccounts[accountIndex].die_date = null;
+                        mxhAccounts[accountIndex].disabled_date = null;
                         mxhAccounts[accountIndex].rescue_success_count = (mxhAccounts[accountIndex].rescue_success_count || 0) + 1;
                     } else {
                         mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
@@ -2289,11 +2455,18 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         try {
             const payload = { status };
 
-            // If status is die, set die_date
+            // 🔍 If status is die, set die_date
             if (status === 'die') {
                 payload.die_date = new Date().toISOString().split('T')[0];
-            } else {
+                payload.disabled_date = null;
+            } else if (status === 'disabled') {
+                // If status is disabled, set disabled_date
+                payload.disabled_date = new Date().toISOString().split('T')[0];
                 payload.die_date = null;
+            } else {
+                // For active status, clear both dates
+                payload.die_date = null;
+                payload.disabled_date = null;
             }
 
             const response = await fetch(`/mxh/api/accounts/${accountId}`, {
@@ -2577,6 +2750,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             wechat_scan_count: 0,
             wechat_last_scan_date: null,
             die_date: null,
+            disabled_date: null,
             rescue_count: 0,
             rescue_success_count: 0,
             notice: null,
@@ -3290,10 +3464,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const newStatus = currentStatus === 'disabled' ? 'active' : 'disabled';
         mxhAccounts[accountIndex].status = newStatus;
 
-        // Update die_date
+        // 🔍 Update disabled_date when toggling disabled status
         if (newStatus === 'disabled') {
-            mxhAccounts[accountIndex].die_date = new Date().toISOString();
+            mxhAccounts[accountIndex].disabled_date = new Date().toISOString();
+            mxhAccounts[accountIndex].die_date = null;
         } else {
+            mxhAccounts[accountIndex].disabled_date = null;
             mxhAccounts[accountIndex].die_date = null;
         }
 
@@ -3322,79 +3498,111 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
     };
 
-    // ===== MXH BACKGROUND CONTEXT MENU =====
-    document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function (event) {
-        // Only show if clicked on the container itself, not on cards
-        if (event.target.id === 'mxh-accounts-container' || event.target.closest('.row')) {
-            event.preventDefault();
-
-            // Hide all other context menus
-            document.querySelectorAll('.custom-context-menu').forEach(menu => {
-                menu.style.display = 'none';
-            });
-
-            // Show background context menu
-            const contextMenu = document.getElementById('mxh-background-context-menu');
-            contextMenu.style.display = 'block';
-
-            // Smart positioning to avoid overflow
-            contextMenu.style.left = event.pageX + 'px';
-            contextMenu.style.top = event.pageY + 'px';
-
-            // Calculate menu size and viewport
-            let menuRect = contextMenu.getBoundingClientRect();
-            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-            const margin = 8;
-
-            let left = event.pageX;
-            let top = event.pageY;
-
-            // Horizontal positioning: Smart left/right positioning
-            if (menuRect.right > viewportWidth - margin) {
-                // Menu will overflow right side of screen
-                // Show menu to the left of mouse
-                left = event.pageX - menuRect.width;
-
-                // If still overflows left, clamp to left margin
-                if (left < margin) {
-                    left = margin;
-                }
-            }
-
-            // Vertical positioning
-            if (menuRect.bottom > viewportHeight) {
-                // Nếu đủ chỗ phía trên chuột thì show lên trên
-                if (event.pageY - menuRect.height > margin) {
-                    top = event.pageY - menuRect.height;
-                } else {
-                    // Nếu không đủ chỗ trên, thì dán sát đáy viewport
-                    top = viewportHeight - menuRect.height - margin + window.scrollY;
-                    if (top < margin + window.scrollY) top = margin + window.scrollY;
-                }
-            }
-
-            contextMenu.style.left = left + 'px';
-            contextMenu.style.top = top + 'px';
+    // ===== MXH BACKGROUND CONTEXT MENU - BULLETPROOF VERSION =====
+    (function() {
+        const menu = document.getElementById('mxh-background-context-menu');
+        const root = document.getElementById('mxh-accounts-container');
+        
+        // 🔍 Move menu to body to escape any parent constraints
+        if (menu && menu.parentElement !== document.body) {
+            document.body.appendChild(menu);
         }
-    });
+        
+        function openMenu(x, y) {
+            // Use clientX/Y with position:fixed for viewport-relative positioning
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            
+            // Set initial position to measure
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            
+            // Make visible temporarily to measure
+            menu.classList.add('is-open');
+            
+            // Adjust if overflows viewport
+            const rect = menu.getBoundingClientRect();
+            const finalX = Math.min(x, vw - rect.width - 4);
+            const finalY = Math.min(y, vh - rect.height - 4);
+            
+            menu.style.left = Math.max(4, finalX) + 'px';
+            menu.style.top = Math.max(4, finalY) + 'px';
+            
+            menu.classList.add('is-open');
+            menu.setAttribute('aria-hidden', 'false');
+        }
+        
+        function closeMenu() {
+            menu.classList.remove('is-open');
+            menu.setAttribute('aria-hidden', 'true');
+        }
+        
+        // Right-click on background (not on cards)
+        root.addEventListener('contextmenu', function(event) {
+            const clickedCard = event.target.closest('.card');
+            const clickedOnContainer = event.target.id === 'mxh-accounts-container';
+            const clickedOnRow = event.target.classList.contains('row');
+            
+            if (!clickedCard && (clickedOnContainer || clickedOnRow)) {
+                event.preventDefault();
+                openMenu(event.clientX, event.clientY); // Use clientX/Y for fixed positioning
+            }
+        });
+        
+        // Close on click outside / ESC / scroll / resize
+        document.addEventListener('click', function(e) {
+            if (!menu.contains(e.target)) closeMenu();
+        }, true);
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+        
+        window.addEventListener('scroll', closeMenu, true);
+        window.addEventListener('resize', closeMenu, true);
+        
+        // Prevent context menu on the menu itself
+        menu.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+    })();
 
     // Handle background context menu actions
     document.getElementById('mxh-background-context-menu').addEventListener('click', function (event) {
         const action = event.target.closest('.menu-item')?.dataset.action;
+        const menu = this;
 
-        if (action === 'view-mode') {
+        if (action === 'view-default' || action === 'view-card2' || action === 'view-card3') {
+            // 🔍 Update view filter
+            const newFilter = action.replace('view-', '');
+            activeViewFilter = newFilter;
+            
+            // Update checkmarks
+            document.getElementById('view-default-check').textContent = newFilter === 'default' ? '✓ ' : '';
+            document.getElementById('view-card2-check').textContent = newFilter === 'card2' ? '✓ ' : '';
+            document.getElementById('view-card3-check').textContent = newFilter === 'card3' ? '✓ ' : '';
+            
+            // Re-render with new filter
+            scheduleRender();
+            
+            // Close menu using class
+            menu.classList.remove('is-open');
+            menu.setAttribute('aria-hidden', 'true');
+        } else if (action === 'view-mode') {
             // Open view mode modal
-            const modal = new bootstrap.Modal(document.getElementById('view-mode-modal'));
+            const modal = new bootstrap.Modal(document.getElementById('mxh-view-mode-modal'));
             modal.show();
+            // Close menu
+            menu.classList.remove('is-open');
+            menu.setAttribute('aria-hidden', 'true');
         } else if (action === 'add-account') {
             // Open add account modal
             const modal = new bootstrap.Modal(document.getElementById('mxh-addAccountModal'));
             modal.show();
+            // Close menu
+            menu.classList.remove('is-open');
+            menu.setAttribute('aria-hidden', 'true');
         }
-
-        // Hide menu
-        this.style.display = 'none';
     });
 
     // Hide all context menus on regular click

@@ -11,6 +11,20 @@
 
         <!-- Action buttons on the right -->
         <div class="d-flex gap-2 align-items-center flex-wrap">
+            
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="mxh-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-funnel me-1"></i> Lọc
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mxh-filter-btn">
+                    <li><a class="dropdown-item active" href="#" data-filter="default">Mặc định</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-filter="wechat_scan">Quét wechat (Đủ điều kiện)</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="has_notice">Thông báo (Đang có)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-filter="creation_date">Ngày tạo (Cũ nhất)</a></li>
+                </ul>
+            </div>
             <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#mxh-view-mode-modal">
                 <i class="bi bi-grid-3x3-gap me-1"></i> Chế Độ Xem
             </button>
@@ -717,6 +731,7 @@
     let isRendering = false;
     let pendingUpdates = false;
     let activeGroupId = null;
+    let activeFilter = 'default'; // THÊM DÒNG NÀY
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
@@ -960,11 +975,13 @@
             }
         }
 
-        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
+        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
         if (account.platform === 'wechat' && account.wechat_created_year) {
             const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 365) {
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            
+            if (totalDays >= 365) {
                 // Check if Hong Kong number
                 const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                 const isHongKongNumber = primaryPhone.startsWith('852');
@@ -1144,11 +1161,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
             }
 
-            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number
+            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
             if (account.platform === 'wechat' && account.wechat_created_year) {
                 const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-                const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-                if (diffDays >= 365) {
+                const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                const totalDays = Math.floor(totalHours / 24);
+                
+                if (totalDays >= 365) {
                     // Check if Hong Kong number
                     const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = primaryPhone.startsWith('852');
@@ -1159,11 +1178,13 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
             }
 
-            // Check secondary account for WeChat (only if blinks)
+            // Check secondary account for WeChat (only if blinks) (IMPROVED with precise time calculation)
             if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
                 const secCreatedDate = new Date(account.secondary_wechat_created_year, account.secondary_wechat_created_month - 1, account.secondary_wechat_created_day);
-                const secDiffDays = Math.ceil((now - secCreatedDate) / (1000 * 60 * 60 * 24));
-                if (secDiffDays >= 365) {
+                const secTotalHours = calculateTimeDifferenceInHours(secCreatedDate, now);
+                const secTotalDays = Math.floor(secTotalHours / 24);
+                
+                if (secTotalDays >= 365) {
                     // Check if Hong Kong number
                     const secondaryPhone = (account.secondary_phone || '').replace(/[\s+]/g, '');
                     const isHongKongNumber = secondaryPhone.startsWith('852');
@@ -1269,6 +1290,91 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         return n;
     }
 
+    // ===== TIME CALCULATION HELPERS =====
+    // Helper function to calculate precise time differences in hours
+    function calculateTimeDifferenceInHours(startDate, endDate) {
+        const diffMilliseconds = endDate.getTime() - startDate.getTime();
+        return diffMilliseconds / (1000 * 60 * 60); // Convert to hours
+    }
+
+    // Helper function to format account age display (DISPLAY ONLY - keep original format)
+    function formatAccountAge(createdDate, now) {
+        const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+        const totalDays = Math.floor(totalHours / 24);
+
+        if (totalDays >= 365) {
+            const years = Math.floor(totalDays / 365);
+            const months = Math.floor((totalDays % 365) / 30);
+            return {
+                display: `${years}năm ${months}th`,
+                color: '#07c160'
+            };
+        } else if (totalDays >= 30) {
+            const months = Math.floor(totalDays / 30);
+            const days = totalDays % 30;
+            return {
+                display: `${months}th ${days}d`,
+                color: '#fff'
+            };
+        } else {
+            return {
+                display: `${totalDays}d`,
+                color: '#fff'
+            };
+        }
+    }
+
+    // Helper function to calculate scan countdown
+    function calculateScanCountdown(account, now) {
+        const currentScanCount = account.wechat_scan_count || 0;
+        const maxScans = 3;
+
+        if (currentScanCount >= maxScans) {
+            // Đã hết lượt - QR đỏ
+            return `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
+        }
+
+        if (account.wechat_last_scan_date) {
+            // 🔍 Có lịch sử quét - đếm ngược đến đầu tháng sau
+            const lastScanDate = new Date(account.wechat_last_scan_date);
+            
+            // Tính đầu tháng sau của lastScanDate
+            const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+            const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+            
+            if (hoursUntilNextMonth > 0) {
+                // Còn thời gian chờ - hiển thị countdown
+                const remainingDays = Math.floor(hoursUntilNextMonth / 24);
+                const remainingHours = Math.floor(hoursUntilNextMonth % 24);
+                if (remainingDays > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                } else if (remainingHours > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
+                } else {
+                    // Đủ điều kiện quét tiếp - QR xanh
+                    return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+                }
+            } else {
+                // Đủ điều kiện quét tiếp - QR xanh (đã sang tháng mới)
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        } else {
+            // Chưa quét lần nào - kiểm tra tuổi tài khoản
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            const remainingHours = Math.floor(totalHours % 24);
+
+            if (totalDays < 90) {
+                const remainingDays = 90 - totalDays;
+                return `Còn ${remainingDays} ngày`;
+            } else {
+                // Đủ điều kiện quét lần đầu - QR xanh
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        }
+    }
+
     // ===== CARD FACE RENDERING =====
     // Render individual card face with all account details
     function renderCardFace(account, allAccounts, side) {
@@ -1280,63 +1386,19 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const borderClass = getAccountBorderClass(account);
         const now = new Date();
 
-        // === MXH OLD LOGIC: Calculate age and scan countdown ===
+        // === IMPROVED LOGIC: Calculate age and scan countdown with precise time ===
         let accountAgeDisplay = '';
         let ageColor = '#fff';
         let scanCountdown = '';
 
         if (platform === 'wechat' && account.wechat_created_year) {
             const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
+            const ageInfo = formatAccountAge(createdDate, now);
+            accountAgeDisplay = ageInfo.display;
+            ageColor = ageInfo.color;
 
-            if (diffDays >= 365) {
-                const years = Math.floor(diffDays / 365);
-                const months = Math.floor((diffDays % 365) / 30);
-                accountAgeDisplay = `${years}năm ${months}th`;
-                ageColor = '#07c160';
-            } else if (diffDays >= 30) {
-                const months = Math.floor(diffDays / 30);
-                accountAgeDisplay = `${months}th ${diffDays % 30}d`;
-            } else {
-                accountAgeDisplay = `${diffDays}d`;
-            }
-
-            // Calculate scan countdown với QR icon (MXH OLD logic)
-            const currentScanCount = account.wechat_scan_count || 0;
-            const maxScans = 3;
-
-            if (currentScanCount >= maxScans) {
-                // Đã hết lượt - QR đỏ
-                scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
-            } else if (account.wechat_last_scan_date) {
-                // Có lịch sử quét - kiểm tra thời gian
-                const lastScanDate = new Date(account.wechat_last_scan_date);
-                const daysSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60 * 24));
-                const remainingDays = 30 - daysSinceScan;
-
-                if (remainingDays > 0) {
-                    // Còn thời gian chờ - hiển thị countdown
-                    const hoursSinceScan = Math.floor((now - lastScanDate) / (1000 * 60 * 60));
-                    const remainingHours = (30 * 24) - hoursSinceScan;
-
-                    if (remainingHours < 24) {
-                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
-                    } else {
-                        scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
-                    }
-                } else {
-                    // Đủ điều kiện quét tiếp - QR xanh
-                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                }
-            } else {
-                // Chưa quét lần nào
-                if (diffDays < 90) {
-                    scanCountdown = `Còn ${90 - diffDays} ngày`;
-                } else {
-                    // Đủ điều kiện quét lần đầu - QR xanh
-                    scanCountdown = `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
-                }
-            }
+            // Calculate scan countdown với QR icon (IMPROVED logic)
+            scanCountdown = calculateScanCountdown(account, now);
         }
 
         // Determine status icon
@@ -1366,7 +1428,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 if (dueDate instanceof Date && !isNaN(dueDate)) {
                     const today = new Date();
                     const remainTime = dueDate - today;
-                    const remainDays = Math.ceil(remainTime / (1000 * 60 * 60 * 24));
+                    const remainHours = Math.floor(remainTime / (1000 * 60 * 60));
+                    const remainDays = Math.floor(remainHours / 24);
 
                     if (remainTime > 0) {
                         let timeDisplay = '';
@@ -1382,7 +1445,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                         extraClass = 'notice-expired-blink';
                     }
 
-                    // Tooltip
+                    // Tooltip (DISPLAY ONLY - keep original format)
                     let tooltipTime;
                     if (remainDays >= 30) {
                         const months = Math.floor(remainDays / 30);
@@ -1402,8 +1465,11 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const isDisabled = account.status === 'disabled';
         if (isDisabled && platform === 'wechat') {
             let disableDays = 0;
-            if (account.die_date) {
-                disableDays = Math.ceil((now - new Date(account.die_date)) / (1000 * 60 * 60 * 24));
+            if (account.disabled_date) {
+                // 🔍 Parse disabled_date correctly (format: YYYY-MM-DD from backend)
+                const disabledDate = new Date(account.disabled_date + 'T00:00:00');
+                const disableHours = Math.floor((now - disabledDate) / (1000 * 60 * 60));
+                disableDays = Math.floor(disableHours / 24);
             }
             disabledInfo = `
                 <div style="font-size: 0.75rem; margin-top: 4px;">
@@ -1431,7 +1497,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                                         ${account.card_name}
                                     </h6>
                                     <i class="bi ${iconClass}" title="${platform}" style="font-size: 0.9rem; color: ${getPlatformColor(platform)};"></i>
-                                    ${totalAccounts > 1 ? `<span class="badge bg-secondary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
+                                    ${totalAccounts > 1 ? `<span class="badge bg-primary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
                                     ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
@@ -1481,6 +1547,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
     // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION =====
     // Render MXH Accounts with performance optimizations and scroll position preservation
+    // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION (UPDATED WITH FILTERS) =====
     function renderMXHAccounts() {
         console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
 
@@ -1501,13 +1568,59 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             ? mxhAccounts.filter(acc => String(acc.group_id) === String(activeGroupId))
             : mxhAccounts;
 
-        if (filteredAccounts.length === 0) {
+        // ===== 1. APPLY FILTERS (LỌC) =====
+        let processedAccounts = [...filteredAccounts];
+        const now = new Date();
+
+        if (activeFilter === 'wechat_scan') {
+            processedAccounts = processedAccounts.filter(acc => {
+                if (acc.platform !== 'wechat') return false; // Chỉ lọc wechat
+
+                const currentScanCount = acc.wechat_scan_count || 0;
+                const maxScans = 3;
+
+                if (currentScanCount >= maxScans) {
+                    return false; // Đã hết lượt
+                }
+
+                if (acc.wechat_last_scan_date) {
+                    // 🔍 Đã quét, check xem đã sang tháng mới chưa
+                    const lastScanDate = new Date(acc.wechat_last_scan_date);
+                    const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+                    const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+                    return hoursUntilNextMonth <= 0; // True nếu đã sang tháng mới (đủ điều kiện quét)
+                } else {
+                    // Chưa quét lần nào, check tuổi 90 ngày
+                    const createdDate = new Date(acc.wechat_created_year, (acc.wechat_created_month || 1) - 1, acc.wechat_created_day || 1);
+                    const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                    const minAgeHours = 90 * 24; // 90 ngày
+                    return totalHours >= minAgeHours; // True nếu đã đủ 90 ngày
+                }
+            });
+        }
+        else if (activeFilter === 'has_notice') {
+            processedAccounts = processedAccounts.filter(acc => {
+                const noticeObj = ensureNoticeParsed(acc.notice);
+                // Lọc những card CÓ notice và notice đó ĐANG BẬT
+                return (noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
+            });
+        }
+
+        if (processedAccounts.length === 0) {
+            let emptyMessage = 'Chưa có tài khoản MXH nào';
+            let emptySubMessage = 'Nhấn "Thêm Tài Khoản MXH" để bắt đầu.';
+
+            if (activeFilter !== 'default' || activeGroupId !== null) {
+                emptyMessage = 'Không có tài khoản nào';
+                emptySubMessage = 'Không tìm thấy tài khoản nào khớp với bộ lọc/nhóm hiện tại.';
+            }
+
             container.innerHTML = `
             <div class="card">
                 <div class="card-body text-center text-muted">
                     <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <h5 class="mt-3">Chưa có tài khoản MXH nào</h5>
-                    <p>Nhấn "Thêm Tài Khoản MXH" để bắt đầu.</p>
+                    <h5 class="mt-3">${emptyMessage}</h5>
+                    <p>${emptySubMessage}</p>
                 </div>
             </div>
         `;
@@ -1516,8 +1629,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         }
 
         // === NEW: Group accounts by card_id (1 card → N accounts) ===
+        // PHẢI SỬ DỤNG "processedAccounts" đã được lọc
         const cardGroups = {};
-        filteredAccounts.forEach(acc => {
+        processedAccounts.forEach(acc => {
             const cardId = acc.card_id;
             if (!cardGroups[cardId]) {
                 cardGroups[cardId] = [];
@@ -1534,16 +1648,43 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             });
         });
 
-        // Sort cards by card_name numerically
-        const sortedCards = Object.entries(cardGroups).sort(([, accountsA], [, accountsB]) => {
+        // === 2. APPLY SORTING (SẮP XẾP) ===
+
+        // Sắp xếp MẶC ĐỊNH: theo card_name (số)
+        let sortedCards = Object.entries(cardGroups).sort(([, accountsA], [, accountsB]) => {
             const nameA = parseInt(accountsA[0].card_name, 10) || Infinity;
             const nameB = parseInt(accountsB[0].card_name, 10) || Infinity;
             return nameA - nameB;
         });
 
-        // === Batch Render Cards với RENDER_BATCH_SIZE ===
+        // Sắp xếp THEO NGÀY TẠO (nếu được chọn)
+        if (activeFilter === 'creation_date') {
+            sortedCards.sort(([, accountsA], [, accountsB]) => {
+                // Lấy tài khoản chính (hoặc tài khoản đầu tiên) để lấy ngày tạo
+                const primaryA = accountsA.find(a => a.is_primary) || accountsA[0];
+                const primaryB = accountsB.find(a => a.is_primary) || accountsB[0];
+
+                // Tạo đối tượng Date (ưu tiên wechat_created_... nếu có)
+                const dateA = new Date(
+                    primaryA.wechat_created_year || primaryA.created_year || 0,
+                    (primaryA.wechat_created_month || primaryA.created_month || 1) - 1,
+                    primaryA.wechat_created_day || primaryA.created_day || 1
+                );
+                const dateB = new Date(
+                    primaryB.wechat_created_year || primaryB.created_year || 0,
+                    (primaryB.wechat_created_month || primaryB.created_month || 1) - 1,
+                    primaryB.wechat_created_day || primaryB.created_day || 1
+                );
+                
+                // Sắp xếp theo timestamp tăng dần (cũ nhất -> mới nhất)
+                return dateA.getTime() - dateB.getTime(); 
+            });
+        }
+
+
+        // === Batch Render Cards (sử dụng sortedCards đã được lọc và sắp xếp) ===
         const BATCH = MXH_CONFIG.RENDER_BATCH_SIZE || 50;
-        const cards = Array.from(sortedCards);
+        const cards = Array.from(sortedCards); // Đảm bảo sortedCards là array
         let i = 0;
         container.innerHTML = '<div class="row g-2"></div>';
         const row = container.firstElementChild;
@@ -1551,29 +1692,25 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         function paintChunk(deadline) {
             while (i < cards.length && (deadline.timeRemaining() > 4 || deadline.didTimeout)) {
                 const [cardId, accounts] = cards[i++];
-                const cid = Number(cardId);                // ✅ normalize
-                const state = getCardState(cid);           // dùng cid
+                const cid = Number(cardId);
+                const state = getCardState(cid);
                 const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
 
                 let activeAccount = null;
                 if (state.activeAccountId !== null) {
-                    // account id luôn là Number, an toàn so sánh ===
                     activeAccount = accounts.find(acc => acc.id === state.activeAccountId);
                 }
 
                 if (!activeAccount) {
                     if (state.activeAccountId === null) {
                         const currentPrimaryId = primaryAccount ? primaryAccount.id : null;
-                        setCardState(cid, { activeAccountId: currentPrimaryId }); // dùng cid
+                        setCardState(cid, { activeAccountId: currentPrimaryId });
                         activeAccount = primaryAccount;
-                        // log tuỳ chọn...
                     } else {
-                        // Hiển thị tạm primary, KHÔNG ghi đè state đã có
                         activeAccount = primaryAccount;
                     }
                 }
 
-                // activeAccount bây giờ chắc chắn là tài khoản hợp lệ để hiển thị
                 const borderClass = getAccountBorderClass(activeAccount);
 
                 const cardHTML = `
@@ -1582,7 +1719,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                             ${getCardBadge(activeAccount)}
                             <div class="mxh-card-inner">
                                 ${renderCardFace(activeAccount, accounts, 'front')}
-                                <!-- Mặt sau được cập nhật khi click chuyển account -->
                             </div>
                         </div>
                     </div>
@@ -1596,6 +1732,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     pendingUpdates = false;
                     scheduleRender();
                 }
+                // Khởi tạo tooltips SAU KHI render xong
+                initializeTooltips(); 
             }
         }
         requestIdleCallback(paintChunk, { timeout: 50 });
@@ -1626,8 +1764,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 (account.wechat_created_month || 1) - 1,
                 account.wechat_created_day || 1
             );
-            const diffDays = Math.ceil((now - createdDate) / (1000 * 60 * 60 * 24));
-            if (diffDays >= 365) {
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            if (totalDays >= 365) {
                 const isHK = /^\+?852/.test(account.phone || '');
                 return isHK ? 'mxh-border-green' : 'mxh-border-white';
             }
@@ -2088,6 +2227,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                     if (result === 'success') {
                         mxhAccounts[accountIndex].status = 'active';
                         mxhAccounts[accountIndex].die_date = null;
+                        mxhAccounts[accountIndex].disabled_date = null;
                         mxhAccounts[accountIndex].rescue_success_count = (mxhAccounts[accountIndex].rescue_success_count || 0) + 1;
                     } else {
                         mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
@@ -2157,11 +2297,18 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         try {
             const payload = { status };
 
-            // If status is die, set die_date
+            // 🔍 If status is die, set die_date
             if (status === 'die') {
                 payload.die_date = new Date().toISOString().split('T')[0];
-            } else {
+                payload.disabled_date = null;
+            } else if (status === 'disabled') {
+                // If status is disabled, set disabled_date
+                payload.disabled_date = new Date().toISOString().split('T')[0];
                 payload.die_date = null;
+            } else {
+                // For active status, clear both dates
+                payload.die_date = null;
+                payload.disabled_date = null;
             }
 
             const response = await fetch(`/mxh/api/accounts/${accountId}`, {
@@ -2445,6 +2592,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             wechat_scan_count: 0,
             wechat_last_scan_date: null,
             die_date: null,
+            disabled_date: null,
             rescue_count: 0,
             rescue_success_count: 0,
             notice: null,
@@ -2839,9 +2987,59 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
         });
 
+        // ===== THÊM VÀO TỪ ĐÂY =====
+        // Handle Filter Dropdown Clicks
+        const filterMenu = document.querySelector('.dropdown-menu[aria-labelledby="mxh-filter-btn"]');
+        if (filterMenu) {
+            filterMenu.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetItem = e.target.closest('.dropdown-item');
+                if (!targetItem) return;
+
+                const filterType = targetItem.dataset.filter;
+                if (!filterType) return;
+
+                activeFilter = filterType;
+
+                // Cập nhật giao diện nút
+                const filterButton = document.getElementById('mxh-filter-btn');
+                
+                // Xóa 'active' khỏi tất cả item
+                filterMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                // Thêm 'active' cho item được chọn
+                targetItem.classList.add('active');
+
+                if (filterType === 'default') {
+                    // Reset về mặc định
+                    filterButton.innerHTML = `<i class="bi bi-funnel me-1"></i> Lọc`;
+                    filterButton.classList.remove('btn-primary');
+                    filterButton.classList.add('btn-outline-secondary');
+                } else {
+                    // Hiển thị filter đang chọn
+                    filterButton.innerHTML = `<i class="bi bi-funnel-fill me-1"></i> ${targetItem.textContent.trim()}`;
+                    filterButton.classList.add('btn-primary');
+                    filterButton.classList.remove('btn-outline-secondary');
+                }
+
+                // Trigger re-render
+                scheduleRender();
+            });
+        }
+        // ===== THÊM VÀO ĐẾN ĐÂY =====
+
         // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
     });
 
+    // Initialize tooltips function
+    function initializeTooltips() {
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
 
     // Open WeChat Modal Function
     let _openWeChatModalLock = false;
@@ -3108,10 +3306,12 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         const newStatus = currentStatus === 'disabled' ? 'active' : 'disabled';
         mxhAccounts[accountIndex].status = newStatus;
 
-        // Update die_date
+        // 🔍 Update disabled_date when toggling disabled status
         if (newStatus === 'disabled') {
-            mxhAccounts[accountIndex].die_date = new Date().toISOString();
+            mxhAccounts[accountIndex].disabled_date = new Date().toISOString();
+            mxhAccounts[accountIndex].die_date = null;
         } else {
+            mxhAccounts[accountIndex].disabled_date = null;
             mxhAccounts[accountIndex].die_date = null;
         }
 

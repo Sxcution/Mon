@@ -38,7 +38,7 @@ def alias_create_card_from_accounts():
             "card_id","is_primary","account_name","username","phone","url",
             "login_username","login_password","created_at","updated_at",
             "wechat_created_day","wechat_created_month","wechat_created_year",
-            "wechat_status","status","muted_until","die_date",
+            "wechat_status","status","muted_until","die_date","disabled_date",
             "wechat_scan_count","wechat_last_scan_date",
             "rescue_count","rescue_success_count","email_reset_date","notice"
         )
@@ -58,6 +58,7 @@ def alias_create_card_from_accounts():
             (data.get("status") or "active"),
             data.get("muted_until"),
             data.get("die_date"),
+            data.get("disabled_date"),
             0, None,
             0, 0,
             data.get("email_reset_date"),
@@ -310,7 +311,7 @@ def update_account_direct(account_id):
         allowed_fields = {
             "status", "username", "phone", "url", "login_username", "login_password",
             "account_name", "wechat_created_day", "wechat_created_month", "wechat_created_year",
-            "wechat_status", "die_date", "wechat_scan_count", "wechat_last_scan_date",
+            "wechat_status", "die_date", "disabled_date", "wechat_scan_count", "wechat_last_scan_date",
             "rescue_count", "rescue_success_count", "email_reset_date", "notice", "muted_until"
         }
         
@@ -525,6 +526,7 @@ def acc_rescue(account_id):
                 UPDATE mxh_accounts
                 SET status = 'active',
                     die_date = NULL,
+                    disabled_date = NULL,
                     rescue_success_count = COALESCE(rescue_success_count,0) + 1,
                     updated_at = ?
                 WHERE id = ?
@@ -601,6 +603,7 @@ def acc_reset(account_id):
                 phone = '.',
                 status = 'active',
                 die_date = NULL,
+                disabled_date = NULL,
                 wechat_scan_count = 0,
                 wechat_last_scan_date = NULL,
                 rescue_count = 0,

@@ -19,6 +19,8 @@ telethon==1.40.0
 
 # Image Processing
 Pillow==11.3.0
+opencv-python==4.12.0.88
+numpy>=2.0.0
 
 # System Tray
 pystray==0.19.5

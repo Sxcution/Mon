@@ -222,10 +222,10 @@ def create_account(card_id):
             """INSERT INTO mxh_accounts (
                 card_id, is_primary, account_name, username, phone, url, 
                 login_username, login_password, wechat_created_day, wechat_created_month, 
-                wechat_created_year, wechat_status, status, die_date, wechat_scan_count, 
+                wechat_created_year, wechat_status, status, die_date, disabled_date, wechat_scan_count, 
                 wechat_last_scan_date, rescue_count, rescue_success_count, email_reset_date, 
                 notice, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 card_id,
                 data.get("is_primary", 0),
@@ -241,6 +241,7 @@ def create_account(card_id):
                 data.get("wechat_status", "available"),
                 data.get("status", "active"),
                 data.get("die_date"),
+                data.get("disabled_date"),
                 0,  # wechat_scan_count
                 data.get("wechat_last_scan_date"),
                 0,  # rescue_count
@@ -399,7 +400,7 @@ def update_account(account_id):
         account_fields = {}
         allowed_account_fields = [
             "username", "phone", "wechat_created_day", "wechat_created_month",
-            "wechat_created_year", "status", "muted_until", "wechat_status", "die_date"
+            "wechat_created_year", "status", "muted_until", "wechat_status", "die_date", "disabled_date"
         ]
         
         for field in allowed_account_fields:

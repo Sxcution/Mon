@@ -85,6 +85,7 @@ def init_database():
             wechat_status TEXT,
             status TEXT,
             die_date TEXT,
+            disabled_date TEXT,
             wechat_scan_count INTEGER DEFAULT 0,
             wechat_last_scan_date TEXT,
             rescue_count INTEGER DEFAULT 0,
@@ -103,6 +104,15 @@ def init_database():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_cards_group ON mxh_cards(group_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_cards_platform ON mxh_cards(platform)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_acc_status ON mxh_accounts(wechat_status, status)")
+    
+    # --- MIGRATION: Add disabled_date column if not exists ---
+    try:
+        cursor.execute("SELECT disabled_date FROM mxh_accounts LIMIT 1")
+    except sqlite3.OperationalError:
+        # Column doesn't exist, add it
+        print("INFO: Adding disabled_date column to mxh_accounts table...")
+        cursor.execute("ALTER TABLE mxh_accounts ADD COLUMN disabled_date TEXT")
+        print("INFO: disabled_date column added successfully.")
     
     conn.commit()
     conn.close()

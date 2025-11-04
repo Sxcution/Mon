@@ -220,65 +220,72 @@ function processSmartTokens(container) {
 
 /* === Kết thúc Smart Token Feature === */
 
-/* === Kích hoạt Smart Token === */
+/* === Kích hoạt Smart Token (Chỉ áp dụng cho tab Ghi chú) === */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 🔍 Xác định vùng chứa nội dung cho Notes
-    const notesContainer = document.getElementById('notes-container');
-    const notesDetailContent = document.getElementById('notes-detail-content');
-    
-    // 🔍 Xác định vùng chứa nội dung cho MXH
-    const mxhAccountsContainer = document.getElementById('mxh-accounts-container');
-    
-    // 🔍 Chạy hàm xử lý cho Notes
-    if (notesContainer) {
-        processSmartTokens(notesContainer);
-    }
-    if (notesDetailContent) {
-        processSmartTokens(notesDetailContent);
-    }
-    
-    // 🔍 Chạy hàm xử lý cho MXH
-    if (mxhAccountsContainer) {
-        processSmartTokens(mxhAccountsContainer);
-    }
-    
-    // 🔍 Nếu không tìm thấy container cụ thể, chạy trên toàn bộ body
-    const containerToProcess = notesContainer || mxhAccountsContainer || document.body;
-    
-    // 🔍 Thêm trình nghe sự kiện Click (dùng event delegation)
-    containerToProcess.addEventListener('click', (event) => {
-        const target = event.target;
+    // Chỉ chạy Smart Token nếu đang ở trang Ghi chú (/notes)
+    if (window.location.pathname === '/notes' || window.location.pathname.startsWith('/notes/')) {
+        console.log('🔍 Smart Token: Activating for Notes tab.');
+
+        // Xác định vùng chứa nội dung cho Notes
+        const notesContainer = document.getElementById('notes-container');
+        const notesDetailContent = document.getElementById('notes-detail-content');
         
-        // 🔍 Kiểm tra xem có click đúng vào .smart-token không
-        if (target.classList.contains('smart-token') && target.dataset.copyValue) {
-            event.preventDefault();
-            copyToClipboard(target.dataset.copyValue);
+        // ⚠️ CHỈ chạy nếu tìm thấy Notes container
+        if (!notesDetailContent && !notesContainer) {
+            console.log('🔍 Smart Token: Notes container not found, skipping.');
+            return;
         }
-    });
-    
-    // 🔍 Observer để xử lý nội dung được load động (AJAX)
-    if (window.MutationObserver) {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach((node) => {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            // 🔍 Xử lý smart token cho nội dung mới được thêm
-                            processSmartTokens(node);
-                        }
-                    });
-                }
-            });
-        });
         
-        // 🔍 Quan sát thay đổi trong container
-        if (containerToProcess) {
+        const containerToProcess = notesDetailContent || notesContainer;
+
+        // Chạy hàm xử lý ban đầu
+        processSmartTokens(containerToProcess);
+
+        // Thêm trình nghe sự kiện Click (dùng event delegation)
+        containerToProcess.addEventListener('click', (event) => {
+            const target = event.target;
+            // Kiểm tra xem có click đúng vào .smart-token không
+            if (target.classList.contains('smart-token') && target.dataset.copyValue) {
+                event.preventDefault();
+                copyToClipboard(target.dataset.copyValue);
+            }
+        });
+
+        // ❌ DISABLED MutationObserver - Notes đã có auto-detect riêng
+        // MutationObserver gây conflict với auto-detect trong editor
+        console.log('🔍 Smart Token: MutationObserver disabled (Notes has its own auto-detection).');
+        
+        /* COMMENTED OUT TO PREVENT CONFLICTS
+        // Observer để xử lý nội dung được load động (AJAX) trong Ghi chú
+        if (window.MutationObserver) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // Chỉ xử lý nếu node được thêm vào trong container của Notes
+                                if (containerToProcess.contains(node)) {
+                                    console.log('🔍 Smart Token: Processing dynamically added content in Notes.');
+                                    processSmartTokens(node);
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Quan sát thay đổi trong container của Notes
             observer.observe(containerToProcess, {
                 childList: true,
                 subtree: true
             });
         }
+        */
+    } else {
+        console.log('🔍 Smart Token: Skipping activation (not on Notes tab). Current path:', window.location.pathname);
     }
 });
+
+/* === Kết thúc Kích hoạt Smart Token === */
 
