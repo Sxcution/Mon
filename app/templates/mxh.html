@@ -1690,12 +1690,10 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             }
 
             container.innerHTML = `
-            <div class="card">
-                <div class="card-body text-center text-muted">
-                    <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
-                    <h5 class="mt-3">${emptyMessage}</h5>
-                    <p>${emptySubMessage}</p>
-                </div>
+            <div class="text-center text-muted" style="padding: 5rem 1rem;">
+                <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="mt-3">${emptyMessage}</h5>
+                <p>${emptySubMessage}</p>
             </div>
         `;
             isRendering = false;
@@ -3107,7 +3105,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         // ===== THÊM VÀO ĐẾN ĐÂY =====
 
         // ===== MXH BACKGROUND CONTEXT MENU (Click chuột phải vào nền) =====
-        document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function (event) {
+        document.getElementById('mxh-tool-pane').addEventListener('contextmenu', function (event) {
             // Chỉ hiển thị nếu KHÔNG click vào card
             const clickedCard = event.target.closest('.card');
             
