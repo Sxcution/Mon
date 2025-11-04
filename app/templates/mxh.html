@@ -1437,10 +1437,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             const noticeObj = typeof account.notice === 'string' ? JSON.parse(account.notice || '{}') : (account.notice || {});
             const hasNotice = noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0);
 
-            // Debug: log notice object
-            if (noticeObj && Object.keys(noticeObj).length > 0) {
-                console.log('Notice for account', account.id, ':', noticeObj, 'hasNotice:', hasNotice);
-            }
 
             if (hasNotice) {
                 const dueDate = new Date(noticeObj.due_date || noticeObj.dueDate);
@@ -1568,8 +1564,6 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     // Render MXH Accounts with performance optimizations and scroll position preservation
     // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION (UPDATED WITH FILTERS) =====
     function renderMXHAccounts() {
-        console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
-
         if (isRendering) {
             pendingUpdates = true;
             return;

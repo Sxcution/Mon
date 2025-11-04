@@ -282,8 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         */
-    } else {
-        console.log('🔍 Smart Token: Skipping activation (not on Notes tab). Current path:', window.location.pathname);
     }
 });
 
