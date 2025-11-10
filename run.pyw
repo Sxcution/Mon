@@ -92,6 +92,11 @@ def run_server():
             print(f"[{APP_NAME}] Starting Flask server on {BASE_URL} (Thread: {threading.current_thread().name})")
         
         # use_reloader=False is CRITICAL for multi-threading stability
+        # Set Flask logger to WARNING to reduce spam logs
+        import logging
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.WARNING)
+        
         app.run(host=HOST, port=PORT, debug=True, use_reloader=False) 
 
     except Exception as e:

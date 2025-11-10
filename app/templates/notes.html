@@ -1090,11 +1090,18 @@
             editorEl.addEventListener('paste', (e) => {
                 e.preventDefault();
 
+                // 🔍 Debug: Bắt đầu xử lý paste
+                console.log('🔍 Paste event triggered');
+
                 // Get the pasted content as plain text from the clipboard
                 let plainText = (e.clipboardData || window.clipboardData).getData('text');
                 if (!plainText) {
+                    console.log('🔍 No text data in clipboard');
                     return;
                 }
+
+                console.log('🔍 Plain text from clipboard:', plainText);
+                console.log('🔍 Number of newlines:', (plainText.match(/\n/g) || []).length);
 
                 // Auto-detect patterns (numbers, /commands, 'quoted text)
                 let processedHtml = autoDetectPatterns(plainText);
@@ -1110,12 +1117,17 @@
                     });
                 }
 
+                // 🔍 Convert newlines to <br> tags để giữ nguyên xuống dòng
+                processedHtml = processedHtml.replace(/\n/g, '<br>');
+                console.log('🔍 Processed HTML after newline conversion:', processedHtml);
+
                 // Insert the processed HTML into the editor
                 document.execCommand('insertHTML', false, processedHtml);
 
                 // Auto-save after paste
                 setTimeout(() => {
                     if (activeNoteId) {
+                        console.log('🔍 Auto-saving note after paste:', activeNoteId);
                         saveNoteChanges(activeNoteId, true);
                     }
                 }, 100);

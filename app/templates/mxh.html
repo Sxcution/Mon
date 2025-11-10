@@ -1424,8 +1424,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     // Render individual card face with all account details
     function renderCardFace(account, allAccounts, side) {
         const cardId = account.card_id;
-        const accountIndex = allAccounts.findIndex(acc => acc.id === account.id) + 1;
-        const totalAccounts = allAccounts.length;
+        // 🔍 Ưu tiên dùng metadata thực nếu có (khi filter Card 2/Card 3)
+        const accountIndex = account._realIndex || (allAccounts.findIndex(acc => acc.id === account.id) + 1);
+        const totalAccounts = account._realTotal || allAccounts.length;
         const platform = account.platform || 'unknown';
         const iconClass = getPlatformIconClass(platform);
         const borderClass = getAccountBorderClass(account);
@@ -1673,7 +1674,11 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             Object.entries(cardGroupsTemp).forEach(([cardId, accounts]) => {
                 if (accounts.length >= targetIndex) {
                     // Nếu card có đủ tài khoản, chỉ lấy tài khoản ở vị trí thứ 2 (index 1) hoặc thứ 3 (index 2)
-                    processedAccounts.push(accounts[targetIndex - 1]);
+                    const targetAccount = accounts[targetIndex - 1];
+                    // 🔍 Lưu thông tin thực về vị trí và tổng số để badge hiển thị đúng (2/3 hoặc 3/3)
+                    targetAccount._realIndex = targetIndex;
+                    targetAccount._realTotal = accounts.length;
+                    processedAccounts.push(targetAccount);
                 }
                 // Nếu card không có đủ tài khoản, nó sẽ bị loại bỏ (không push)
             });
