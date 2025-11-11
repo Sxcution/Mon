@@ -1,0 +1,3951 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 0.5rem 1rem;">
+    <!-- Action Buttons and Groups - All in one row -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <!-- WeChat Groups on the left -->
+        <div class="d-flex gap-2 align-items-center flex-wrap" id="mxh-groups-nav">
+            <!-- Groups will be rendered here by JavaScript -->
+        </div>
+
+        <!-- Action buttons on the right -->
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="mxh-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-funnel me-1"></i> Lọc
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mxh-filter-btn">
+                    <li><a class="dropdown-item active" href="#" data-filter="default">Mặc định</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-filter="wechat_scan">Quét wechat (Đủ điều kiện)</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="has_notice">Thông báo (Đang có)</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-filter="creation_date">Ngày tạo (Cũ nhất)</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#mxh-view-mode-modal">
+                <i class="bi bi-grid-3x3-gap me-1"></i> Chế Độ Xem
+            </button>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#mxh-addAccountModal">
+                <i class="bi bi-plus-lg me-1"></i> Thêm Tài Khoản
+            </button>
+        </div>
+    </div>
+
+    <div id="mxh-accounts-container">
+        <!-- MXH accounts will be rendered here -->
+        <div class="card">
+            <div class="card-body text-center text-muted">
+                <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="mt-3">Đang tải...</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MXH View Mode Modal -->
+<div class="modal fade" id="mxh-view-mode-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="height: 70%;">
+            <div class="modal-header" style="height: 44px; padding: 0.5rem 1rem;">
+                <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Chế Độ Xem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="mxh-cards-per-row" class="form-label">Số Cards Mỗi Hàng</label>
+                    <input type="number" class="form-control" id="mxh-cards-per-row"
+                        placeholder="Nhập số cards mỗi hàng..." min="1" max="20" value="12">
+                    <div class="form-text">Nhập số từ 1 đến 20. Ví dụ: 12 = 12 cards mỗi hàng</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="mxh-apply-view-mode-btn">Áp Dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MXH Add Account Modal -->
+<div class="modal fade" id="mxh-addAccountModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-plus-lg me-2"></i>Thêm Tài Khoản MXH</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-username" class="form-label mb-1">Tên Người Dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-username"
+                            placeholder="Nhập tên người dùng...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mxh-platform" class="form-label mb-1">Nền Tảng</label>
+                        <select class="form-select form-select-sm" id="mxh-platform" required>
+                            <option value="">Chọn nền tảng...</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="twitter">Twitter</option>
+                            <option value="zalo">Zalo</option>
+                            <option value="wechat">WeChat</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-password" class="form-label mb-1">Mật Khẩu</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-password"
+                            placeholder="Nhập mật khẩu...">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mxh-phone" class="form-label mb-1">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="mxh-phone"
+                            placeholder="Nhập số điện thoại...">
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <label for="mxh-url" class="form-label mb-1">URL (tùy chọn)</label>
+                        <input type="url" class="form-control form-control-sm" id="mxh-url" placeholder="https://...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <div class="row g-0">
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                    id="mxh-day" placeholder="Ngày" min="1" max="31" maxlength="2" style="width:56px"
+                                    required></div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                    id="mxh-month" placeholder="Tháng" min="1" max="12" maxlength="2" style="width:56px"
+                                    required>
+                            </div>
+                            <div class="col-auto"><input type="number" class="form-control form-control-sm w-auto"
+                                    id="mxh-year" placeholder="Năm" min="2020" max="2030" maxlength="4"
+                                    style="width:76px" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary btn-sm" id="mxh-save-account-btn">Tạo Card</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- MXH Background Context Menu -->
+<div id="mxh-background-context-menu" class="custom-context-menu" style="display: none;">
+    <div class="menu-item" data-action="view-mode">
+        <i class="bi bi-grid-3x3-gap me-2"></i> Chế Độ Xem
+    </div>
+    <div class="menu-item" data-action="add-account">
+        <i class="bi bi-plus-lg me-2"></i> + Thêm Tài Khoản MXH
+    </div>
+</div>
+
+<!-- WeChat Account Modal -->
+<div class="modal fade" id="wechat-account-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content">
+            <div class="modal-header" style="height: 50px; padding: 8px 16px;">
+                <h10 class="modal-title" style="font-size: 1rem; margin: 0;"><i class="bi bi-wechat me-2"></i>Thông Tin
+                    Tài Khoản WeChat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-2">
+                    <div style="width: 80px; display: inline-block; margin-right: 1px;">
+                        <label class="form-label mb-1">Card</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-card-name" maxlength="3"
+                            required style="width: 100%;">
+                    </div>
+                    <div style="width: 140px; display: inline-block;">
+                        <label class="form-label mb-1">Ngày Tạo</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-date"
+                            placeholder="dd/mm/yyyy" maxlength="10" required style="width: 80%;">
+                    </div>
+                    <div style="width: 160px; display: inline-block;">
+                        <label class="form-label mb-10">Trạng Thái</label>
+                        <select class="form-select form-select-sm" id="wechat-status" required style="width: 100%;">
+                            <option value="active">Available</option>
+                            <option value="disabled">Vô hiệu hóa</option>
+                            <option value="die">Die</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 1px;">
+                    <div style="width: 200px; display: inline-block; margin-right: 1px;">
+                        <label class="form-label mb-1" style="margin-bottom: 1ch;">Tên Người Dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-username" required
+                            style="width: 100%;">
+                    </div>
+                    <div style="width: 180px; display: inline-block;">
+                        <label class="form-label mb-1" style="margin-bottom: 1px;">Số Điện Thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="wechat-phone"
+                            placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" id="wechat-reset-btn">Reset</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="wechat-apply-btn">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generic Account Edit Modal -->
+<div class="modal fade" id="generic-account-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="generic-account-edit-form">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Thông Tin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <label for="generic-username" class="form-label mb-1">Tên đăng nhập</label>
+                            <input type="text" class="form-control form-control-sm" id="generic-username"
+                                placeholder="Nhập tên đăng nhập...">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="generic-password" class="form-label mb-1">Mật khẩu</label>
+                            <input type="password" class="form-control form-control-sm" id="generic-password"
+                                placeholder="Nhập mật khẩu...">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="generic-display-name" class="form-label mb-1">Tên người dùng</label>
+                        <input type="text" class="form-control form-control-sm" id="generic-display-name"
+                            placeholder="Nhập tên người dùng...">
+                    </div>
+                    <div class="mb-2">
+                        <label for="generic-phone" class="form-label mb-1">Số điện thoại</label>
+                        <input type="text" class="form-control form-control-sm" id="generic-phone"
+                            placeholder="Nhập số điện thoại...">
+                    </div>
+                    <div class="mb-2">
+                        <label for="generic-url" class="form-label mb-1">URL</label>
+                        <input type="url" class="form-control form-control-sm" id="generic-url"
+                            placeholder="Nhập URL...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger btn-sm" id="generic-reset-btn">Reset</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="generic-apply-btn">Áp dụng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Card Number Modal -->
+<div class="modal fade" id="change-card-number-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-123 me-2"></i>Đổi Số Hiệu Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="new-card-number" class="form-label">Số hiệu mới</label>
+                    <input type="number" class="form-control" id="new-card-number" placeholder="Nhập số hiệu mới..."
+                        min="1" required>
+                    <div class="form-text">Nhập số hiệu mới cho card này</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="apply-card-number-btn">Áp Dụng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notice Modal -->
+<div class="modal fade" id="noticeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bell-fill me-2"></i>Đặt Thông Báo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 align-items-end mb-3">
+                    <div class="col-8">
+                        <label for="noticeTitle" class="form-label">Tiêu Đề</label>
+                        <input type="text" class="form-control" id="noticeTitle" placeholder="Nhập tiêu đề..."
+                            value="Thông báo">
+                    </div>
+                    <div class="col-4">
+                        <label for="noticeDays" class="form-label">Số ngày</label>
+                        <input type="number" class="form-control" id="noticeDays" min="1" step="1" value="30">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <textarea class="form-control" id="noticeNote" rows="3" placeholder="Ghi chú..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitNotice()">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="delete-card-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Xác Nhận Xóa Card
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa card này không?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả dữ liệu của card sẽ bị xóa vĩnh
+                    viễn.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Xác Nhận Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Card Confirmation Modal -->
+<div class="modal fade" id="reset-card-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h10 class="modal-title"><i class="bi bi-arrow-clockwise me-2 text-danger"></i>Xác Nhận Reset Card</h10>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn reset card này không?</p>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Xóa tất cả thông tin,lịch sử card:
+                    <ul class="mb-10 mt-10">
+                        <li>Thông tin tài khoản chính và phụ</li>
+                        <li>Lịch sử quét QR</li>
+                        <li>Trạng thái vô hiệu hóa</li>
+                        <li>Lịch sử vi phạm,cứu tài khoản</li>
+                        <li>Tất cả dữ liệu khác</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-reset-btn">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ========================================
+   FLIP CARD 3D CSS
+   ======================================== */
+
+    /* Card wrapper với perspective */
+    .mxh-card-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 140px;
+        perspective: 1200px;
+    }
+
+    /* Card inner - container cho 2 mặt */
+    .mxh-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 140px;
+        transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    /* Card face - front & back */
+    .mxh-card-face {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+
+    /* Front face */
+    .mxh-card-face.front {
+        transform: rotateY(0deg);
+        z-index: 2;
+    }
+
+    /* Click vào số card để flip */
+    .card-number {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .card-number:hover {
+        color: #00e0ff !important;
+    }
+
+    /* ========================================
+   CONTEXT MENU SUBMENU
+   ======================================== */
+
+    .mxh-context-menu {
+        position: fixed;
+        z-index: 10000;
+        background: #2c3340;
+        border: 1px solid #444a59;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 200px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .mxh-menu-item {
+        padding: 8px 12px;
+        color: #e6e6e6;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.2s;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .mxh-menu-item:hover {
+        background: rgba(0, 224, 255, 0.15);
+        color: #00e0ff;
+    }
+
+    .mxh-menu-item.has-submenu>span::after {
+        content: '▶';
+        float: right;
+        margin-left: 12px;
+        font-size: 0.8em;
+        opacity: 0.6;
+    }
+
+    .mxh-submenu {
+        position: absolute;
+        left: calc(100% - 2px);
+        /* Overlap để giữ hover */
+        top: -4px;
+        margin-left: 0;
+        display: none;
+        background: #2c3340;
+        border: 1px solid #444a59;
+        border-radius: 8px;
+        padding: 4px;
+        min-width: 200px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 10001;
+    }
+
+    .mxh-menu-item.has-submenu:hover>.mxh-submenu,
+    .mxh-submenu:hover {
+        display: block !important;
+    }
+
+    .mxh-submenu .mxh-menu-item {
+        padding: 6px 10px;
+        font-size: 0.9em;
+    }
+
+    /* Nested submenu (submenu bên trong submenu) */
+    .mxh-submenu .mxh-menu-item.has-submenu>.mxh-submenu {
+        position: absolute;
+        left: calc(100% - 2px);
+        top: -4px;
+        display: none;
+    }
+
+    .mxh-submenu .mxh-menu-item.has-submenu:hover>.mxh-submenu {
+        display: block !important;
+    }
+
+    /* ========================================
+   BORDER COLORS (Viền Card)
+   ======================================== */
+
+    .mxh-border-red {
+        border: 2px solid #ff4d4f !important;
+        box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.3), 0 0 12px rgba(255, 77, 79, 0.4) !important;
+    }
+
+    .mxh-border-orange {
+        border: 2px solid #ffa500 !important;
+        box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.3), 0 0 12px rgba(255, 165, 0, 0.4) !important;
+    }
+
+    .mxh-border-green {
+        border: 2px solid #07c160 !important;
+        box-shadow: 0 0 0 1px rgba(7, 193, 96, 0.3), 0 0 12px rgba(7, 193, 96, 0.4) !important;
+    }
+
+    .mxh-border-white {
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 12px rgba(255, 255, 255, 0.4) !important;
+    }
+
+    /* Hide number input spinners */
+    .no-spinner {
+        appearance: textfield;
+    }
+
+    .no-spinner::-webkit-outer-spin-button,
+    .no-spinner::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Smart Group Badge Styles */
+    .group-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .smart-badge {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(4px);
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .group-btn:hover .smart-badge {
+        transform: scale(1.2);
+        box-shadow: 0 0 12px currentColor;
+    }
+
+    /* Card Badge Styles - giống hệt group badge */
+    .card-top-badge {
+        z-index: 20;
+        /* Sử dụng cùng styling với .group-badge */
+        animation: pulse 2s infinite;
+        box-shadow: 0 0 8px currentColor;
+        transition: all 0.3s ease;
+    }
+
+    .card-top-badge:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 12px currentColor;
+    }
+
+    /* Nav Badge Styles */
+    .nav-badge-container {
+        position: absolute;
+        top: -4px;
+        right: -8px;
+        z-index: 10;
+    }
+
+    .nav-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 8px #dc354540;
+        animation: pulse 2s infinite;
+        z-index: 10;
+    }
+
+    /* Mini preview cạnh badge */
+    .notice-preview {
+        position: fixed;
+        width: auto;
+        min-width: 200px;
+        max-width: 280px;
+        background: var(--bs-body-bg, #121212);
+        color: var(--bs-body-color, #eee);
+        border: 1px solid var(--bs-border-color, #2a2a2a);
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+        padding: 12px 12px 10px 12px;
+        opacity: 0;
+        transform: translateY(-2px) scale(.985);
+        transition: opacity .12s ease, transform .18s cubic-bezier(.2, .8, .2, 1);
+        z-index: 1999;
+        pointer-events: auto;
+    }
+
+    .notice-preview.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .notice-preview::after {
+        content: "";
+        position: absolute;
+        top: var(--arrow-top, -8px);
+        left: var(--arrow-left, 16px);
+        width: 12px;
+        height: 12px;
+        background: inherit;
+        border-left: 1px solid var(--bs-border-color, #2a2a2a);
+        border-top: 1px solid var(--bs-border-color, #2a2a2a);
+        transform: rotate(45deg);
+    }
+
+    .notice-preview .title {
+        font-weight: 700;
+        font-size: 14px;
+        margin: 0 0 6px 0;
+    }
+
+    .notice-preview .meta {
+        font-size: 12px;
+        opacity: .75;
+        margin-bottom: 8px;
+    }
+
+    .notice-preview .content {
+        font-size: 13px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+        max-height: 180px;
+        overflow: auto;
+        margin-bottom: 10px;
+    }
+
+    .notice-preview .actions {
+        display: none;
+        /* ẩn ở chế độ hover */
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .notice-preview.action .actions {
+        display: flex;
+    }
+
+    /* hiện khi click */
+
+    .notice-preview .btn {
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .notice-preview .btn-ok {
+        background: var(--bs-secondary-bg, #1e1e1e);
+        border: 1px solid var(--bs-border-color, #2a2a2a);
+        color: var(--bs-body-color, #eee);
+    }
+
+    .notice-preview .btn-off {
+        background: var(--bs-danger, #dc3545);
+        border: 1px solid transparent;
+        color: #fff;
+    }
+</style>
+
+<script>
+    // ===== MXH REAL-TIME CONFIGURATION =====
+    const MXH_CONFIG = {
+        AUTO_REFRESH_INTERVAL: 15000, // Changed from 3000 to 15000ms (15 seconds)
+        DEBOUNCE_DELAY: 500, // Debounce for inline editing
+        RENDER_BATCH_SIZE: 50, // Cards to render per batch (for smooth rendering)
+        ENABLE_AUTO_REFRESH: true // Changed from false to true
+    };
+
+    // --- GLOBAL FLAGS ---
+    window.interactionPaused = false; // set true khi mở modal/context, false khi đóng
+    let _mxhGroupsTick = 0;
+    let refreshAbortController;
+
+    // Tự dừng/bật auto-refresh theo trạng thái tab
+    document.addEventListener('visibilitychange', () => {
+        document.hidden ? stopAutoRefresh() : startAutoRefresh();
+    });
+
+    // MXH Global State
+    let mxhGroups = [];
+    let mxhAccounts = [];
+    let currentContextAccountId = null;
+    let currentContextCardId = null; // NEW: For card-based context menu
+    let autoRefreshTimer = null;
+    let isRendering = false;
+    let pendingUpdates = false;
+    let activeGroupId = null;
+    let activeFilter = 'default'; // THÊM DÒNG NÀY
+    let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
+
+    // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
+    // State chỉ lưu trong memory, không persist qua reload
+    const cardStates = new Map();
+    const lockedStates = new Map(); // Lock state để prevent override trong quá trình edit
+
+    // NEW: always normalize cardId to Number for state keys
+    function getCardState(cardId) {
+        const key = Number(cardId); // <-- normalize
+        if (!cardStates.has(key)) {
+            // console.log(`📦 Creating new state for card ${key}`);
+            cardStates.set(key, { activeAccountId: null, isFlipped: false });
+        }
+        const raw = cardStates.get(key);
+
+        // If locked, force activeAccountId to the locked one
+        if (lockedStates.has(key)) {
+            const lockedAccountId = lockedStates.get(key);
+            return { ...raw, activeAccountId: lockedAccountId };
+        }
+        return raw;
+    }
+
+    function setCardState(cardId, updates, lock = false) {
+        const key = Number(cardId); // <-- normalize
+        // console.log(`📝 setCardState(${key}):`, JSON.stringify(updates), lock ? '🔒' : '');
+
+        if (lockedStates.has(key)) {
+            // console.warn(`⚠️ Card ${key} state is LOCKED, ignoring update`);
+            return;
+        }
+
+        const state = getCardState(key); // already normalized
+        Object.assign(state, updates);
+        cardStates.set(key, state); // re-set not strictly required, but explicit
+
+        if (lock && updates.activeAccountId != null) {
+            lockedStates.set(key, updates.activeAccountId);
+            // Auto-unlock
+            setTimeout(() => lockedStates.delete(key), 2000);
+        }
+    }
+
+    // ===== PERFORMANCE OPTIMIZATION UTILITIES =====
+    // Helper so sánh nhanh groups
+    const areGroupsEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+    // Gom render về idle để mượt
+    const scheduleRender = () => (window.requestIdleCallback
+        ? requestIdleCallback(() => renderMXHAccounts(), { timeout: 200 })
+        : setTimeout(() => renderMXHAccounts(), 50)
+    );
+
+    // Debounce function - prevents excessive API calls
+    function debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Throttle function - ensures function runs at most once per interval
+    function throttle(func, interval) {
+        let lastCall = 0;
+        return function (...args) {
+            const now = Date.now();
+            if (now - lastCall >= interval) {
+                lastCall = now;
+                func.apply(this, args);
+            }
+        };
+    }
+
+
+    // ===== REAL-TIME DATA LOADING WITH SMART UPDATES =====
+    // Load MXH data from API with optimized rendering
+    async function loadMXHData(forceRender = false) {
+        if (window.interactionPaused || document.hidden) return; // (1) chặn khi đang tương tác/ẩn tab
+
+        // (3) chống race-condition
+        refreshAbortController?.abort();
+        refreshAbortController = new AbortController();
+        const { signal } = refreshAbortController;
+
+        try {
+            // last_updated_at ⇒ tự build accountsUrl như hiện tại của Sếp
+            const accountsUrl = lastUpdateTime
+                ? `/mxh/api/accounts?last_updated_at=${lastUpdateTime}`
+                : '/mxh/api/accounts';
+
+            // (2) giảm tần suất fetch groups
+            const fetchGroupsNow = ((++_mxhGroupsTick % 4) === 1) || forceRender;
+            const groupsReq = fetchGroupsNow ? fetch('/mxh/api/groups', { signal }) : Promise.resolve({ ok: false });
+            const accountsReq = fetch(accountsUrl, { signal });
+
+            const [groupsResponse, accountsResponse] = await Promise.all([groupsReq, accountsReq]);
+
+            // (4) chỉ render groups nếu thay đổi
+            if (groupsResponse && groupsResponse.ok) {
+                const newGroups = await groupsResponse.json();
+                if (!areGroupsEqual(mxhGroups, newGroups)) {
+                    mxhGroups = newGroups;
+                    renderGroupsNav();
+                    updateMainNavBadge();
+                }
+            }
+
+            let dataChanged = false;
+
+            if (accountsResponse.ok) {
+                const delta = await accountsResponse.json();                 // [{...updated accounts...}]
+                const accountMap = new Map(mxhAccounts.map(a => [a.id, a])); // quick index
+                let touchedAny = false;
+
+                delta.forEach(acc => {
+                    const exist = accountMap.get(acc.id);
+                    if (!exist || JSON.stringify(exist) !== JSON.stringify(acc)) {
+                        accountMap.set(acc.id, acc);
+                        touchedAny = true;
+                    }
+                });
+
+                if (touchedAny) {
+                    mxhAccounts = Array.from(accountMap.values());
+                    dataChanged = true;
+
+                    // Cập nhật lastUpdateTime sau khi merge delta thành công
+                    lastUpdateTime = Math.max(
+                        lastUpdateTime || 0,
+                        ...(delta.map(acc => new Date(acc.updated_at || acc.updatedAt || Date.now()).getTime()))
+                    ) || Date.now();
+                }
+            }
+
+            // (5) render mượt
+            if (forceRender || dataChanged) {
+                scheduleRender();
+                updateMainNavBadge();
+            }
+
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error('loadMXHData error:', err);
+        }
+    }
+
+    // ===== AUTO-REFRESH SYSTEM =====
+    function startAutoRefresh() {
+        if (!MXH_CONFIG.ENABLE_AUTO_REFRESH) return;
+
+        stopAutoRefresh(); // Clear any existing timer
+
+        autoRefreshTimer = setInterval(async () => {
+            await loadMXHData(false); // Don't force render, only if data changed
+        }, MXH_CONFIG.AUTO_REFRESH_INTERVAL);
+
+        // console.log('✅ MXH Auto-refresh enabled (every', MXH_CONFIG.AUTO_REFRESH_INTERVAL / 1000, 'seconds)');
+    }
+
+    function stopAutoRefresh() {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+        }
+    }
+
+    // Pause auto-refresh when user is interacting (context menu open, modal open, etc.)
+    let interactionPaused = false;
+    function pauseAutoRefresh() {
+        interactionPaused = true;
+    }
+
+    function resumeAutoRefresh() {
+        interactionPaused = false;
+    }
+
+    // Ensure platform group exists
+    async function ensurePlatformGroup(platform) {
+        const existingGroup = mxhGroups.find(g => g.name.toLowerCase() === platform.toLowerCase());
+        if (existingGroup) {
+            return existingGroup.id;
+        }
+
+        try {
+            const response = await fetch('/mxh/api/groups', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: platform.charAt(0).toUpperCase() + platform.slice(1),
+                    color: getPlatformColor(platform)
+                })
+            });
+
+            if (response.ok) {
+                const newGroup = await response.json();
+                mxhGroups.push(newGroup);
+                return newGroup.id;
+            } else {
+                throw new Error('Failed to create group');
+            }
+        } catch (error) {
+            console.error('Error creating platform group:', error);
+            throw error;
+        }
+    }
+
+    // Get platform color
+    function getPlatformColor(platform) {
+        const colors = {
+            'facebook': '#1877f2',
+            'instagram': '#e4405f',
+            'twitter': '#1da1f2',
+            'zalo': '#0068ff',
+            'wechat': '#07c160',
+            'telegram': '#0088cc',
+            'whatsapp': '#25d366'
+        };
+        return colors[platform] || '#6c757d';
+    }
+
+    // Get card badge for individual cards (positioned like group badge)
+    function getCardBadge(account) {
+        const now = new Date();
+        let badgeInfo = {
+            total: 0,
+            noticeExpired: 0,
+            needHongKong: 0
+        };
+
+        // 🟠 Cam: Check if notice countdown finished (causes blink)
+        if (account.notice) {
+            const noticeObj = ensureNoticeParsed(account.notice);
+            if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
+                const startDate = new Date(noticeObj.start_at);
+                const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
+                if (now >= endDate) {
+                    badgeInfo.noticeExpired++;
+                    badgeInfo.total++;
+                }
+            }
+        }
+
+        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
+        if (account.platform === 'wechat' && account.wechat_created_year) {
+            const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            
+            if (totalDays >= 365) {
+                // Check if Hong Kong number
+                const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
+                const isHongKongNumber = primaryPhone.startsWith('852');
+                if (!isHongKongNumber) {
+                    badgeInfo.needHongKong++;
+                    badgeInfo.total++;
+                }
+            }
+        }
+
+        // Return badge HTML if there are issues
+        let badges = '';
+
+        // Badge ĐẾN HẠN (đỏ) - ưu tiên cao nhất
+        if (badgeInfo.noticeExpired > 0) {
+            let noticeCache = '';
+            if (account.notice) {
+                try {
+                    const noticeObj = ensureNoticeParsed(account.notice);
+                    if (noticeObj && noticeObj.enabled) {
+                        noticeCache = JSON.stringify({
+                            title: noticeObj.title || 'Thông báo đến hạn',
+                            message: noticeObj.note || 'Không có nội dung',
+                            due_human: noticeObj.due_date ? new Date(noticeObj.due_date).toLocaleDateString('vi-VN') : '',
+                            due_at: noticeObj.due_date,
+                            notice_id: account.id
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing notice cache:', e);
+                }
+            }
+
+            badges += `<span class="group-badge card-top-badge notice-badge" 
+                            data-badge-type="due"
+                            data-account-id="${account.id}"
+                            data-notice-id="${account.id}"
+                            ${noticeCache ? `data-notice-cache='${noticeCache}'` : ''}
+                            title="Thông báo đến hạn"
+                            style="background-color: #fd7e14; color: white; box-shadow: 0 0 8px #fd7e1440;">
+                    </span>`;
+        }
+
+        // Badge ĐỦ 1 NĂM (trắng) - chỉ hiển thị nếu không có badge đỏ
+        if (badgeInfo.needHongKong > 0 && badgeInfo.noticeExpired === 0) {
+            badges += `<span class="group-badge card-top-badge notice-badge" 
+                            data-badge-type="anniversary"
+                            data-account-id="${account.id}"
+                            title="Tài khoản đủ tuổi 1 năm"
+                            style="background:#fff; color:#111; border:2px solid rgba(0,0,0,.15); box-shadow: 0 0 8px rgba(255,255,255,0.3);">
+                        1Y
+                    </span>`;
+        }
+
+        return badges;
+
+        return '';
+    }
+
+    function getPlatformIconClass(platform) {
+        const p = String(platform || '').toLowerCase();
+        return ({
+            wechat: 'bi-wechat',
+            telegram: 'bi-telegram',
+            facebook: 'bi-facebook',
+            instagram: 'bi-instagram',
+            zalo: 'bi-chat-dots-fill',   // không có icon Zalo -> dùng chat
+            twitter: 'bi-twitter',
+            whatsapp: 'bi-whatsapp'
+        }[p]) || 'bi-person-badge';
+    }
+
+    // Get next card number (per platform/group)
+    async function getNextCardNumber(groupId) {
+        // Get all accounts in the same group
+        const groupAccounts = mxhAccounts.filter(acc => acc.group_id === groupId);
+        const numbers = groupAccounts.map(acc => parseInt(acc.card_name)).filter(n => !isNaN(n));
+
+        if (numbers.length === 0) return 1;
+
+        // Find first available number starting from 1
+        for (let i = 1; i <= numbers.length + 1; i++) {
+            if (!numbers.includes(i)) {
+                return i;
+            }
+        }
+        return Math.max(...numbers) + 1;
+    }
+
+    // Toggle group visibility
+    // ===== RENDER GROUP NAVIGATION WITH BADGES =====
+    function renderGroupsNav() {
+        const groupsNavContainer = document.getElementById('mxh-groups-nav');
+        if (!groupsNavContainer) return;
+
+        let html = '';
+
+        // Get unique groups from accounts
+        const uniqueGroupIds = [...new Set(mxhAccounts.map(acc => acc.group_id).filter(id => id))];
+
+        uniqueGroupIds.forEach(groupId => {
+            const group = mxhGroups.find(g => g.id == groupId);
+            if (group) {
+                // Calculate smart badge info for this group
+                const badgeInfo = calculateGroupBadge(groupId);
+                const isActive = activeGroupId === groupId;
+
+                // Create smart badge with tooltip
+                let badgeHtml = '';
+                if (badgeInfo.total > 0) {
+                    const badgeColor = badgeInfo.noticeExpired > 0 ? '#fd7e14' :  // 🟠 Cam: Thông báo hết hạn
+                        badgeInfo.needHongKong > 0 ? '#ffffff' : group.color; // ⚪ Trắng: Cần đổi số HK
+
+                    const badgeTooltip = `Cần chú ý: ${badgeInfo.total} tài khoản
+${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hết hạn\n` : ''}${badgeInfo.needHongKong > 0 ? `• ${badgeInfo.needHongKong} tài khoản cần đổi số Hong Kong\n` : ''}`.trim();
+
+                    badgeHtml = `<span class="group-badge smart-badge" 
+                                        style="background-color: ${badgeColor}; 
+                                               color: ${badgeColor === '#ffffff' ? '#000000' : '#ffffff'};
+                                               border: ${badgeColor === '#ffffff' ? '2px solid #000000' : '2px solid rgba(255, 255, 255, 0.3)'};
+                                               box-shadow: 0 0 8px ${badgeColor}40;
+                                               animation: pulse 2s infinite;"
+                                        title="${badgeTooltip}">
+                                    ${badgeInfo.total}
+                                </span>`;
+                }
+
+                html += `
+                <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-light'} group-btn" 
+                        onclick="selectGroup('${groupId}')"
+                        style="position: relative; ${isActive ? '' : 'border-color: ' + group.color + ';'}">
+                    <i class="bi ${group.icon || 'bi-people-fill'}" style="color: ${isActive ? '#fff' : group.color};"></i>
+                    ${group.name}
+                    ${badgeHtml}
+                </button>
+            `;
+            }
+        });
+
+        // Add "All" button
+        const isAllActive = activeGroupId === null;
+        html = `
+        <button class="btn btn-sm ${isAllActive ? 'btn-primary' : 'btn-outline-secondary'}" 
+                onclick="selectGroup(null)">
+            <i class="bi bi-grid-3x3-gap"></i> Tất Cả
+        </button>
+    ` + html;
+
+        groupsNavContainer.innerHTML = html;
+
+        // Update main MXH nav badge
+        updateMainNavBadge();
+    }
+
+    // Calculate smart badge count for a specific group with detailed breakdown
+    function calculateGroupBadge(groupId) {
+        const now = new Date();
+        let badgeInfo = {
+            total: 0,
+            noticeExpired: 0,
+            needHongKong: 0
+        };
+
+        mxhAccounts.forEach(account => {
+            if (account.group_id != groupId) return;
+
+            // 🟠 Cam: Check if notice countdown finished (causes blink)
+            if (account.notice) {
+                const noticeObj = ensureNoticeParsed(account.notice);
+                if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
+                    const startDate = new Date(noticeObj.start_at);
+                    const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
+                    if (now >= endDate) {
+                        badgeInfo.noticeExpired++;
+                        badgeInfo.total++;
+                    }
+                }
+            }
+
+            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
+            if (account.platform === 'wechat' && account.wechat_created_year) {
+                const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
+                const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                const totalDays = Math.floor(totalHours / 24);
+                
+                if (totalDays >= 365) {
+                    // Check if Hong Kong number
+                    const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
+                    const isHongKongNumber = primaryPhone.startsWith('852');
+                    if (!isHongKongNumber) {
+                        badgeInfo.needHongKong++;
+                        badgeInfo.total++;
+                    }
+                }
+            }
+
+            // Check secondary account for WeChat (only if blinks) (IMPROVED with precise time calculation)
+            if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
+                const secCreatedDate = new Date(account.secondary_wechat_created_year, account.secondary_wechat_created_month - 1, account.secondary_wechat_created_day);
+                const secTotalHours = calculateTimeDifferenceInHours(secCreatedDate, now);
+                const secTotalDays = Math.floor(secTotalHours / 24);
+                
+                if (secTotalDays >= 365) {
+                    // Check if Hong Kong number
+                    const secondaryPhone = (account.secondary_phone || '').replace(/[\s+]/g, '');
+                    const isHongKongNumber = secondaryPhone.startsWith('852');
+                    if (!isHongKongNumber) {
+                        badgeInfo.needHongKong++;
+                        badgeInfo.total++;
+                    }
+                }
+            }
+        });
+
+        return badgeInfo;
+    }
+
+    // Update badge dots on main MXH nav tab
+    function updateMainNavBadge() {
+        const mxhNavLink = document.querySelector('a[href*="mxh"]');
+        if (!mxhNavLink) return;
+
+        // Remove existing badge
+        const existingBadge = mxhNavLink.querySelector('.nav-badge-container');
+        if (existingBadge) existingBadge.remove();
+
+        // Calculate total badge count across all groups
+        const uniqueGroupIds = [...new Set(mxhAccounts.map(acc => acc.group_id).filter(id => id))];
+        let totalBadgeCount = 0;
+        let hasNoticeExpired = false;
+        let hasNeedHongKong = false;
+
+        uniqueGroupIds.forEach(groupId => {
+            const badgeInfo = calculateGroupBadge(groupId);
+            if (badgeInfo.total > 0) {
+                totalBadgeCount += badgeInfo.total;
+                if (badgeInfo.noticeExpired > 0) hasNoticeExpired = true;
+                if (badgeInfo.needHongKong > 0) hasNeedHongKong = true;
+            }
+        });
+
+        if (totalBadgeCount > 0) {
+            const badgeContainer = document.createElement('div');
+            badgeContainer.className = 'nav-badge-container';
+
+            // Create red badge similar to group badge
+            const badge = document.createElement('span');
+            badge.className = 'group-badge nav-badge';
+            badge.style.cssText = `
+                position: absolute;
+                top: 2px;
+                right: -8px;
+                background-color: #dc3545;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                font-size: 0.7rem;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 8px #dc354540;
+                animation: pulse 2s infinite;
+                z-index: 10;
+            `;
+
+            // Show count or priority indicator
+            if (hasNoticeExpired) {
+                badge.textContent = '!';
+                badge.title = `${totalBadgeCount} thông báo cần chú ý`;
+            } else {
+                badge.textContent = totalBadgeCount > 99 ? '99+' : totalBadgeCount;
+                badge.title = `${totalBadgeCount} tài khoản cần chú ý`;
+            }
+
+            badgeContainer.appendChild(badge);
+            mxhNavLink.appendChild(badgeContainer);
+        }
+    }
+
+    // Select a specific group (or null for all)
+    function selectGroup(groupId) {
+        activeGroupId = groupId === 'null' ? null : groupId;
+        renderGroupsNav();
+        scheduleRender();
+    }
+
+    // ===== DATETIME NORMALIZATION HELPERS =====
+    // Cắt microseconds về 3 chữ số và thêm 'Z' nếu thiếu timezone
+    function normalizeISOForJS(iso) {
+        if (!iso) return null;
+        let s = String(iso).trim();
+        // thay ' ' -> 'T' nếu có
+        s = s.replace(' ', 'T');
+        // Nếu có 'Z' thì ok; nếu có +00:00 thì vẫn ok
+        if (!/[zZ]|[+\-]\d{2}:\d{2}$/.test(s)) s += 'Z';
+        // Chuẩn hoá phần .xxxxx... về 3 chữ số
+        s = s.replace(/(\.\d{3})\d+/, '$1'); // giữ .mmm
+        return s;
+    }
+
+    function ensureNoticeParsed(notice) {
+        let n = (typeof notice === 'string') ? (() => { try { return JSON.parse(notice) } catch { return {} } })() : (notice || {});
+        if (n && n.start_at) n.start_at = normalizeISOForJS(n.start_at);
+        return n;
+    }
+
+    // ===== TIME CALCULATION HELPERS =====
+    // Helper function to calculate precise time differences in hours
+    function calculateTimeDifferenceInHours(startDate, endDate) {
+        const diffMilliseconds = endDate.getTime() - startDate.getTime();
+        return diffMilliseconds / (1000 * 60 * 60); // Convert to hours
+    }
+
+    // Helper function to format account age display (DISPLAY ONLY - keep original format)
+    function formatAccountAge(createdDate, now) {
+        const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+        const totalDays = Math.floor(totalHours / 24);
+
+        if (totalDays >= 365) {
+            const years = Math.floor(totalDays / 365);
+            const months = Math.floor((totalDays % 365) / 30);
+            return {
+                display: `${years}năm ${months}th`,
+                color: '#07c160'
+            };
+        } else if (totalDays >= 30) {
+            const months = Math.floor(totalDays / 30);
+            const days = totalDays % 30;
+            return {
+                display: `${months}th ${days}d`,
+                color: '#fff'
+            };
+        } else {
+            return {
+                display: `${totalDays}d`,
+                color: '#fff'
+            };
+        }
+    }
+
+    // Helper function to calculate scan countdown
+    function calculateScanCountdown(account, now) {
+        const currentScanCount = account.wechat_scan_count || 0;
+        const maxScans = 3;
+
+        if (currentScanCount >= maxScans) {
+            // Đã hết lượt - QR đỏ
+            return `<i class="bi bi-qr-code me-1" style="color: #dc3545;"></i>${maxScans}/${maxScans}`;
+        }
+
+        if (account.wechat_last_scan_date) {
+            // 🔍 Có lịch sử quét - đếm ngược đến đầu tháng sau
+            const lastScanDate = new Date(account.wechat_last_scan_date);
+            
+            // Tính đầu tháng sau của lastScanDate
+            const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+            const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+            
+            if (hoursUntilNextMonth > 0) {
+                // Còn thời gian chờ - hiển thị countdown
+                const remainingDays = Math.floor(hoursUntilNextMonth / 24);
+                const remainingHours = Math.floor(hoursUntilNextMonth % 24);
+                if (remainingDays > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff; font-size: 1.3em;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingDays}d)</small>`;
+                } else if (remainingHours > 0) {
+                    return `<i class="bi bi-qr-code me-1" style="color: #ffffff;"></i>${currentScanCount}/${maxScans} <small class="text-warning">(${remainingHours}h)</small>`;
+                } else {
+                    // Đủ điều kiện quét tiếp - QR xanh
+                    return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+                }
+            } else {
+                // Đủ điều kiện quét tiếp - QR xanh (đã sang tháng mới)
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        } else {
+            // Chưa quét lần nào - kiểm tra tuổi tài khoản
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            const remainingHours = Math.floor(totalHours % 24);
+
+            if (totalDays < 90) {
+                const remainingDays = 90 - totalDays;
+                return `Còn ${remainingDays} ngày`;
+            } else {
+                // Đủ điều kiện quét lần đầu - QR xanh
+                return `<i class="bi bi-qr-code me-1" style="color: #07c160; font-size: 1.3em;"></i>${currentScanCount}/${maxScans}`;
+            }
+        }
+    }
+
+    // ===== CARD FACE RENDERING =====
+    // Render individual card face with all account details
+    function renderCardFace(account, allAccounts, side) {
+        const cardId = account.card_id;
+        const accountIndex = allAccounts.findIndex(acc => acc.id === account.id) + 1;
+        const totalAccounts = allAccounts.length;
+        const platform = account.platform || 'unknown';
+        const iconClass = getPlatformIconClass(platform);
+        const borderClass = getAccountBorderClass(account);
+        const now = new Date();
+
+        // === IMPROVED LOGIC: Calculate age and scan countdown with precise time ===
+        let accountAgeDisplay = '';
+        let ageColor = '#fff';
+        let scanCountdown = '';
+
+        if (platform === 'wechat' && account.wechat_created_year) {
+            const createdDate = new Date(account.wechat_created_year, (account.wechat_created_month || 1) - 1, account.wechat_created_day || 1);
+            const ageInfo = formatAccountAge(createdDate, now);
+            accountAgeDisplay = ageInfo.display;
+            ageColor = ageInfo.color;
+
+            // Calculate scan countdown với QR icon (IMPROVED logic)
+            scanCountdown = calculateScanCountdown(account, now);
+        }
+
+        // Determine status icon
+        let statusIcon = '';
+        if (account.status === 'die') {
+            statusIcon = '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>';
+        } else if (account.status === 'disabled') {
+            statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
+        }
+
+        // === Thông báo logic (từ MXH OLD) ===
+        let noticeHtml = '';
+        let extraClass = '';
+        let tipHtml = '';
+
+        try {
+            const noticeObj = typeof account.notice === 'string' ? JSON.parse(account.notice || '{}') : (account.notice || {});
+            const hasNotice = noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0);
+
+            // Debug: log notice object
+            if (noticeObj && Object.keys(noticeObj).length > 0) {
+                console.log('Notice for account', account.id, ':', noticeObj, 'hasNotice:', hasNotice);
+            }
+
+            if (hasNotice) {
+                const dueDate = new Date(noticeObj.due_date || noticeObj.dueDate);
+                if (dueDate instanceof Date && !isNaN(dueDate)) {
+                    const today = new Date();
+                    const remainTime = dueDate - today;
+                    const remainHours = Math.floor(remainTime / (1000 * 60 * 60));
+                    const remainDays = Math.floor(remainHours / 24);
+
+                    if (remainTime > 0) {
+                        let timeDisplay = '';
+                        if (remainDays >= 30) {
+                            const remainMonths = Math.floor(remainDays / 30);
+                            timeDisplay = `${remainMonths}m`;
+                        } else {
+                            timeDisplay = `${remainDays}d`;
+                        }
+                        noticeHtml = `<div class="notice-line" style="font-size: 0.75rem; color: #ff9500; margin-top: 4px;">${escapeHtml(noticeObj.title || 'Thông báo')}: ${timeDisplay}</div>`;
+                    } else {
+                        noticeHtml = `<div class="notice-line expired" style="font-size: 0.75rem; color: #ff4d4f; margin-top: 4px;">${escapeHtml(noticeObj.title || 'Thông báo')}: đã đến hạn</div>`;
+                        extraClass = 'notice-expired-blink';
+                    }
+
+                    // Tooltip (DISPLAY ONLY - keep original format)
+                    let tooltipTime;
+                    if (remainDays >= 30) {
+                        const months = Math.floor(remainDays / 30);
+                        tooltipTime = `${months}m`;
+                    } else {
+                        tooltipTime = `${remainDays}d`;
+                    }
+                    tipHtml = `<div class="notice-tooltip"><div class="notice-tooltip-title">${escapeHtml(noticeObj.title || 'Thông báo')} – ${tooltipTime}</div><div class="notice-tooltip-note">${escapeHtml(noticeObj.note || '')}</div></div>`;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing notice:', e);
+        }
+
+        // ===== Hiển thị khi disabled ======
+        let disabledInfo = '';
+        const isDisabled = account.status === 'disabled';
+        if (isDisabled && platform === 'wechat') {
+            let disableDays = 0;
+            if (account.disabled_date) {
+                // 🔍 Parse disabled_date correctly (format: YYYY-MM-DD from backend)
+                const disabledDate = new Date(account.disabled_date + 'T00:00:00');
+                const disableHours = Math.floor((now - disabledDate) / (1000 * 60 * 60));
+                disableDays = Math.floor(disableHours / 24);
+            }
+            disabledInfo = `
+                <div style="font-size: 0.75rem; margin-top: 4px;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <small class="text-warning">Ngày: ${disableDays}</small>
+                        <small>Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="mxh-card-face ${side}">
+                <div class="card tool-card mxh-card ${borderClass} ${extraClass}"
+                     oncontextmenu="handleCardContextMenu(event, ${cardId}, ${account.id}, '${platform}'); return false;"
+                     style="height: 100%; margin: 0;">
+                    <div class="card-body" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-1">
+                                    <h6 class="card-title mb-0 card-number" 
+                                        onclick="event.stopPropagation(); flipCardToAccount(${cardId}, ${account.id}); return false;"
+                                        style="font-size: 1.26rem; font-weight: 600;"
+                                        title="Click để flip card">
+                                        ${account.card_name}
+                                    </h6>
+                                    <i class="bi ${iconClass}" title="${platform}" style="font-size: 0.9rem; color: ${getPlatformColor(platform)};"></i>
+                                    ${totalAccounts > 1 ? `<span class="badge bg-primary" style="font-size: 0.65rem;">${accountIndex}/${totalAccounts}</span>` : ''}
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    ${accountAgeDisplay ? `<small style="color: ${ageColor}; font-size: 0.7rem; font-weight: 500;">${accountAgeDisplay}</small>` : ''}
+                                </div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div>
+                                    <small 
+                                        contenteditable="true" 
+                                        class="editable-field" 
+                                        data-field="username" 
+                                        data-account-id="${account.id}"
+                                        style="font-size: 0.84rem; cursor: text; border-bottom: 1px dashed transparent; display: inline;"
+                                        onblur="saveInlineEdit(this, ${account.id}, 'username')"
+                                        onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                                        onfocus="this.style.borderBottom='1px dashed #007bff'"
+                                        title="Click để chỉnh sửa">${account.username || '...'}</small>${statusIcon}
+                                </div>
+                                <small 
+                                    contenteditable="true" 
+                                    class="editable-field text-muted" 
+                                    data-field="phone" 
+                                    data-account-id="${account.id}"
+                                    style="font-size: 0.84rem; display: block; cursor: text; border-bottom: 1px dashed transparent;"
+                                    onblur="saveInlineEdit(this, ${account.id}, 'phone')"
+                                    onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                                    onfocus="this.style.borderBottom='1px dashed #007bff'"
+                                    title="Click để chỉnh sửa">📞 ${account.phone || '...'}</small>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            ${platform === 'wechat' ? `
+                                <div class="text-center mt-1">
+                                    ${isDisabled ? disabledInfo : `<small style="font-size: 0.75rem;">${scanCountdown}</small>`}
+                                </div>
+                            ` : ''}
+                            ${noticeHtml}
+                            ${tipHtml}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION =====
+    // Render MXH Accounts with performance optimizations and scroll position preservation
+    // ===== OPTIMIZED RENDERING WITH SCROLL PRESERVATION (UPDATED WITH FILTERS) =====
+    function renderMXHAccounts() {
+        console.log('🎨 renderMXHAccounts() called from:', new Error().stack.split('\n')[2].trim());
+
+        if (isRendering) {
+            pendingUpdates = true;
+            return;
+        }
+
+        isRendering = true;
+        const container = document.getElementById('mxh-accounts-container');
+
+        // 💾 SAVE SCROLL POSITION BEFORE RENDER
+        const scrollY = window.scrollY || window.pageYOffset;
+        const scrollX = window.scrollX || window.pageXOffset;
+
+        // Filter by active group
+        const filteredAccounts = activeGroupId
+            ? mxhAccounts.filter(acc => String(acc.group_id) === String(activeGroupId))
+            : mxhAccounts;
+
+        // ===== 1. APPLY FILTERS (LỌC) =====
+        let processedAccounts = [...filteredAccounts];
+        const now = new Date();
+
+        if (activeFilter === 'wechat_scan') {
+            processedAccounts = processedAccounts.filter(acc => {
+                if (acc.platform !== 'wechat') return false; // Chỉ lọc wechat
+
+                const currentScanCount = acc.wechat_scan_count || 0;
+                const maxScans = 3;
+
+                if (currentScanCount >= maxScans) {
+                    return false; // Đã hết lượt
+                }
+
+                if (acc.wechat_last_scan_date) {
+                    // 🔍 Đã quét, check xem đã sang tháng mới chưa
+                    const lastScanDate = new Date(acc.wechat_last_scan_date);
+                    const nextMonth = new Date(lastScanDate.getFullYear(), lastScanDate.getMonth() + 1, 1);
+                    const hoursUntilNextMonth = calculateTimeDifferenceInHours(now, nextMonth);
+                    return hoursUntilNextMonth <= 0; // True nếu đã sang tháng mới (đủ điều kiện quét)
+                } else {
+                    // Chưa quét lần nào, check tuổi 90 ngày
+                    const createdDate = new Date(acc.wechat_created_year, (acc.wechat_created_month || 1) - 1, acc.wechat_created_day || 1);
+                    const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                    const minAgeHours = 90 * 24; // 90 ngày
+                    return totalHours >= minAgeHours; // True nếu đã đủ 90 ngày
+                }
+            });
+        }
+        else if (activeFilter === 'has_notice') {
+            processedAccounts = processedAccounts.filter(acc => {
+                const noticeObj = ensureNoticeParsed(acc.notice);
+                // Lọc những card CÓ notice và notice đó ĐANG BẬT
+                return (noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0));
+            });
+        }
+
+        if (processedAccounts.length === 0) {
+            let emptyMessage = 'Chưa có tài khoản MXH nào';
+            let emptySubMessage = 'Nhấn "Thêm Tài Khoản MXH" để bắt đầu.';
+
+            if (activeFilter !== 'default' || activeGroupId !== null) {
+                emptyMessage = 'Không có tài khoản nào';
+                emptySubMessage = 'Không tìm thấy tài khoản nào khớp với bộ lọc/nhóm hiện tại.';
+            }
+
+            container.innerHTML = `
+            <div class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <h5 class="mt-3">${emptyMessage}</h5>
+                    <p>${emptySubMessage}</p>
+                </div>
+            </div>
+        `;
+            isRendering = false;
+            return;
+        }
+
+        // === NEW: Group accounts by card_id (1 card → N accounts) ===
+        // PHẢI SỬ DỤNG "processedAccounts" đã được lọc
+        const cardGroups = {};
+        processedAccounts.forEach(acc => {
+            const cardId = acc.card_id;
+            if (!cardGroups[cardId]) {
+                cardGroups[cardId] = [];
+            }
+            cardGroups[cardId].push(acc);
+        });
+
+        // Sort accounts within each card (primary first)
+        Object.values(cardGroups).forEach(accounts => {
+            accounts.sort((a, b) => {
+                if (a.is_primary && !b.is_primary) return -1;
+                if (!a.is_primary && b.is_primary) return 1;
+                return a.id - b.id;
+            });
+        });
+
+        // === 2. APPLY SORTING (SẮP XẾP) ===
+
+        // Sắp xếp MẶC ĐỊNH: theo card_name (số)
+        let sortedCards = Object.entries(cardGroups).sort(([, accountsA], [, accountsB]) => {
+            const nameA = parseInt(accountsA[0].card_name, 10) || Infinity;
+            const nameB = parseInt(accountsB[0].card_name, 10) || Infinity;
+            return nameA - nameB;
+        });
+
+        // Sắp xếp THEO NGÀY TẠO (nếu được chọn)
+        if (activeFilter === 'creation_date') {
+            sortedCards.sort(([, accountsA], [, accountsB]) => {
+                // Lấy tài khoản chính (hoặc tài khoản đầu tiên) để lấy ngày tạo
+                const primaryA = accountsA.find(a => a.is_primary) || accountsA[0];
+                const primaryB = accountsB.find(a => a.is_primary) || accountsB[0];
+
+                // Tạo đối tượng Date (ưu tiên wechat_created_... nếu có)
+                const dateA = new Date(
+                    primaryA.wechat_created_year || primaryA.created_year || 0,
+                    (primaryA.wechat_created_month || primaryA.created_month || 1) - 1,
+                    primaryA.wechat_created_day || primaryA.created_day || 1
+                );
+                const dateB = new Date(
+                    primaryB.wechat_created_year || primaryB.created_year || 0,
+                    (primaryB.wechat_created_month || primaryB.created_month || 1) - 1,
+                    primaryB.wechat_created_day || primaryB.created_day || 1
+                );
+                
+                // Sắp xếp theo timestamp tăng dần (cũ nhất -> mới nhất)
+                return dateA.getTime() - dateB.getTime(); 
+            });
+        }
+
+
+        // === Batch Render Cards (sử dụng sortedCards đã được lọc và sắp xếp) ===
+        const BATCH = MXH_CONFIG.RENDER_BATCH_SIZE || 50;
+        const cards = Array.from(sortedCards); // Đảm bảo sortedCards là array
+        let i = 0;
+        container.innerHTML = '<div class="row g-2"></div>';
+        const row = container.firstElementChild;
+
+        function paintChunk(deadline) {
+            while (i < cards.length && (deadline.timeRemaining() > 4 || deadline.didTimeout)) {
+                const [cardId, accounts] = cards[i++];
+                const cid = Number(cardId);
+                const state = getCardState(cid);
+                const primaryAccount = accounts.find(a => a.is_primary) || accounts[0];
+
+                let activeAccount = null;
+                if (state.activeAccountId !== null) {
+                    activeAccount = accounts.find(acc => acc.id === state.activeAccountId);
+                }
+
+                if (!activeAccount) {
+                    if (state.activeAccountId === null) {
+                        const currentPrimaryId = primaryAccount ? primaryAccount.id : null;
+                        setCardState(cid, { activeAccountId: currentPrimaryId });
+                        activeAccount = primaryAccount;
+                    } else {
+                        activeAccount = primaryAccount;
+                    }
+                }
+
+                const borderClass = getAccountBorderClass(activeAccount);
+
+                const cardHTML = `
+                    <div class="col" style="padding: 2px;" data-card-id="${cardId}">
+                        <div class="mxh-card-wrapper ${state.isFlipped ? 'flipped' : ''}" id="card-wrapper-${cardId}" style="position: relative;">
+                            ${getCardBadge(activeAccount)}
+                            <div class="mxh-card-inner">
+                                ${renderCardFace(activeAccount, accounts, 'front')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                row.insertAdjacentHTML('beforeend', cardHTML);
+            }
+            if (i < cards.length) requestIdleCallback(paintChunk, { timeout: 50 });
+            else {
+                isRendering = false;
+                if (pendingUpdates) {
+                    pendingUpdates = false;
+                    scheduleRender();
+                }
+                // Khởi tạo tooltips SAU KHI render xong
+                initializeTooltips(); 
+            }
+        }
+        requestIdleCallback(paintChunk, { timeout: 50 });
+
+        // Restore scroll position
+        window.scrollTo(scrollX, scrollY);
+    }
+
+    // Helper: Get border class based on account status
+    function getAccountBorderClass(account) {
+        const status = String(account.status || '').toLowerCase();
+
+        // Disabled = màu cam
+        if (status === 'disabled') {
+            return 'mxh-border-orange';
+        }
+
+        // Die = màu đỏ
+        if (status === 'die' || !!account.die_date) {
+            return 'mxh-border-red';
+        }
+
+        // Check > 1 year (WeChat)
+        if (account.platform === 'wechat' && account.wechat_created_year) {
+            const now = new Date();
+            const createdDate = new Date(
+                account.wechat_created_year,
+                (account.wechat_created_month || 1) - 1,
+                account.wechat_created_day || 1
+            );
+            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+            const totalDays = Math.floor(totalHours / 24);
+            if (totalDays >= 365) {
+                const isHK = /^\+?852/.test(account.phone || '');
+                return isHK ? 'mxh-border-green' : 'mxh-border-white';
+            }
+        }
+
+        return ''; // Default - no special border
+    }
+
+    // === NEW: Flip Card Function (Single Flip Animation) ===
+    function flipCardToAccount(cardId, accountId) {
+        const state = getCardState(cardId);
+        const wrapper = document.getElementById(`card-wrapper-${cardId}`);
+        const cardInner = wrapper?.querySelector('.mxh-card-inner');
+        if (!wrapper || !cardInner) return;
+
+        // Do nothing if clicking the currently active account
+        if (state.activeAccountId === accountId) {
+            return;
+        }
+
+        // 1. Get the new account data
+        const accounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
+        const newActiveAccount = accounts.find(acc => acc.id === accountId);
+        if (!newActiveAccount) return;
+
+        // 2. Update the state (save to sessionStorage)
+        setCardState(cardId, { activeAccountId: accountId });
+
+        // 3. Start the flip-out animation
+        cardInner.style.transform = 'rotateY(90deg)';
+
+        // 4. After half the animation, swap the content and flip back in
+        setTimeout(() => {
+            // Render the new face directly into the inner container
+            cardInner.innerHTML = renderCardFace(newActiveAccount, accounts, 'front');
+
+            // Prepare for flip-in animation
+            cardInner.style.transform = 'rotateY(-90deg)';
+
+            // Force a reflow to apply the transform before the next animation frame
+            void cardInner.offsetWidth;
+
+            // 5. Flip back in to 0 degrees
+            cardInner.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+            cardInner.style.transform = 'rotateY(0deg)';
+
+        }, 300); // Half of the total 0.6s animation
+    }
+
+    // Helper function for notice configuration
+    function configureNoticeToggleFor(menuId, account) {
+        const el = document.querySelector(`#${menuId} [id$="-notice-toggle"]`);
+        if (!el) return;
+        const noticeObj = ensureNoticeParsed(account.notice);
+        const hasNotice = !!(noticeObj && noticeObj.enabled);
+        // set action + icon + text
+        el.dataset.action = hasNotice ? 'clear-notice' : 'set-notice';
+        el.innerHTML = hasNotice
+            ? '<i class="bi bi-bell-slash-fill me-2"></i> Hủy thông báo'
+            : '<i class="bi bi-bell-fill me-2"></i> Thông báo';
+    }
+
+    // Handle Card Context Menu - Use Unified Menu
+    // === NEW: Card-based Context Menu với Submenu ===
+    window.handleCardContextMenu = function (event, cardId, accountId, platform) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        currentContextCardId = cardId;
+        currentContextAccountId = accountId;
+        pauseAutoRefresh();
+
+        const account = mxhAccounts.find(acc => acc.id === accountId);
+        if (!account) return;
+
+        // Get all accounts on this card
+        const cardAccounts = mxhAccounts.filter(acc => Number(acc.card_id) === Number(cardId));
+        const state = getCardState(cardId);
+        const isPrimary = account.is_primary;
+        const currentStatus = (account.status || 'active').toLowerCase();
+
+        // Parse notice if it's a string
+        let noticeObj = null;
+        try {
+            noticeObj = typeof account.notice === 'string' ? JSON.parse(account.notice || '{}') : (account.notice || {});
+        } catch (e) {
+            noticeObj = {};
+        }
+        const hasNotice = noticeObj && (noticeObj.enabled === true || noticeObj.enabled === 1 || Number(noticeObj.days) > 0);
+
+        // Create context menu dynamically
+        const menuHtml = `
+            <div class="mxh-context-menu" id="card-context-menu">
+                <!-- 1. Tài Khoản -->
+                <div class="mxh-menu-item has-submenu">
+                    <span>Tài Khoản (${cardAccounts.length})</span>
+                    <div class="mxh-submenu">
+                        ${cardAccounts.map((acc, idx) => {
+            const isActive = acc.id === state.activeAccountId;
+            const isPrimary = acc.is_primary;
+            return `
+                            <div class="mxh-menu-item" data-action="switch-account" data-account-id="${acc.id}">
+                                ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}
+                            </div>
+                        `;
+        }).join('')}
+                        <div class="mxh-menu-item" data-action="add-sub-account" style="border-top: 1px solid #444a59; margin-top: 4px; padding-top: 4px;">
+                            <i class="bi bi-plus-circle me-2"></i>Thêm Tài Khoản
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Thông tin -->
+                <div class="mxh-menu-item" data-action="edit">
+                    <i class="bi bi-pencil me-2"></i>Thông Tin
+                </div>
+
+                <!-- 3. Trạng Thái (WeChat only) -->
+                ${platform === 'wechat' ? `
+                <div class="mxh-menu-item has-submenu wechat-only">
+                    <span>Trạng Thái</span>
+                    <div class="mxh-submenu">
+                        ${currentStatus === 'disabled' ? `
+                            <!-- Khi đã disabled, chỉ hiển thị 2 option cứu -->
+                            <div class="mxh-menu-item" data-action="rescue-success">Được Cứu</div>
+                            <div class="mxh-menu-item" data-action="rescue-failed">Cứu Thất Bại</div>
+                        ` : `
+                            <!-- Khi chưa disabled, hiển thị 3 trạng thái bình thường -->
+                            <div class="mxh-menu-item" data-action="status-active">${currentStatus === 'active' ? '✓ ' : ''}Active</div>
+                            <div class="mxh-menu-item" data-action="status-disabled">Disabled</div>
+                            <div class="mxh-menu-item" data-action="status-die">${currentStatus === 'die' ? '✓ ' : ''}Die</div>
+                        `}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 4. Copy SĐT -->
+                ${account.phone ? `
+                <div class="mxh-menu-item" data-action="copy-phone">
+                    <i class="bi bi-phone me-2"></i>Copy SĐT
+                </div>
+                ` : ''}
+
+                <!-- 5. Quét WeChat (WeChat only) -->
+                ${platform === 'wechat' ? `
+                <div class="mxh-menu-item has-submenu wechat-only">
+                    <span><i class="bi bi-qr-code me-2"></i>Quét WeChat</span>
+                    <div class="mxh-submenu">
+                        <div class="mxh-menu-item" data-action="scan-wechat">
+                            <i class="bi bi-check-circle me-2"></i>Đã Quét
+                        </div>
+                        <div class="mxh-menu-item" data-action="reset-scan">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Lượt Quét
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 6. Thông báo -->
+                <div class="mxh-menu-item" data-action="${hasNotice ? 'cancel-notice' : 'toggle-notice'}">
+                    ${hasNotice
+                ? '<i class="bi bi-bell-slash-fill me-2"></i>Hủy Thông Báo'
+                : '<i class="bi bi-bell me-2"></i>Thông Báo'}
+                </div>
+
+                <!-- Xóa -->
+                <div class="mxh-menu-item" data-action="delete" style="color: #ff4d4f; border-top: 1px solid #444a59; margin-top: 4px; padding-top: 4px;">
+                    <i class="bi bi-trash me-2"></i>${isPrimary ? 'Xóa Card' : 'Xóa Acc'}
+                </div>
+            </div>
+        `;
+
+        // Remove existing menu
+        const existingMenu = document.getElementById('card-context-menu');
+        if (existingMenu) existingMenu.remove();
+
+        // Add new menu
+        document.body.insertAdjacentHTML('beforeend', menuHtml);
+
+        // Smart positioning
+        const menu = document.getElementById('card-context-menu');
+        positionContextMenuSmart(menu, event.clientX, event.clientY);
+
+        // Position submenus
+        setTimeout(() => positionAllSubmenusForMenu(menu), 50);
+
+        // Add click handler
+        setTimeout(() => {
+            document.addEventListener('click', hideCardContextMenu, { once: true });
+        }, 100);
+    }
+
+    // Smart anchor: flip trái/phải + trên/dưới theo mép màn hình, kèm offset 8px
+    function positionContextMenuSmart(menu, x, y) {
+        if (!menu) return;
+
+        // Tạm hiển thị để đo chính xác kích thước
+        const prevVis = menu.style.visibility;
+        const prevDisp = menu.style.display;
+        menu.style.visibility = 'hidden';
+        menu.style.display = 'block';
+
+        const rect = menu.getBoundingClientRect();
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const m = 8; // offset tránh đè vào con trỏ & rìa
+
+        // Quyết định hướng
+        const placeRight = (x + rect.width + m <= vw);       // đủ chỗ bên phải con trỏ?
+        const placeDown = (y + rect.height + m <= vh);      // đủ chỗ phía dưới con trỏ?
+
+        // Tính toạ độ theo hướng đã chọn
+        let left = placeRight ? (x + m) : (x - rect.width - m);
+        let top = placeDown ? (y + m) : (y - rect.height - m);
+
+        // Clamp cứng để không vượt viewport (khi cực sát rìa)
+        left = Math.min(Math.max(left, m), vw - rect.width - m);
+        top = Math.min(Math.max(top, m), vh - rect.height - m);
+
+        // Áp dụng
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+
+        // Trả lại trạng thái hiển thị ban đầu (menu đã có vị trí đúng)
+        menu.style.visibility = prevVis || '';
+        menu.style.display = prevDisp || '';
+    }
+
+    // Position all submenus for a menu
+    function positionAllSubmenusForMenu(menu) {
+        if (!menu) return;
+
+        const submenuItems = menu.querySelectorAll('.mxh-menu-item.has-submenu');
+        submenuItems.forEach(item => {
+            const submenu = item.querySelector('.mxh-submenu');
+            if (!submenu) return;
+
+            const itemRect = item.getBoundingClientRect();
+            const submenuRect = submenu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Default: right side
+            submenu.style.left = '100%';
+            submenu.style.right = 'auto';
+            submenu.style.top = '0';
+            submenu.style.bottom = 'auto';
+
+            // Check right overflow - show on left
+            if (itemRect.right + submenuRect.width > viewportWidth) {
+                submenu.style.left = 'auto';
+                submenu.style.right = '100%';
+            }
+
+            // Check bottom overflow - show upward
+            if (itemRect.top + submenuRect.height > viewportHeight) {
+                submenu.style.top = 'auto';
+                submenu.style.bottom = '0';
+            }
+        });
+    }
+
+    function hideCardContextMenu() {
+        const menu = document.getElementById('card-context-menu');
+        if (menu) menu.remove();
+        resumeAutoRefresh();
+    }
+
+    // Context menu click handler
+    document.addEventListener('click', async function (e) {
+        const menuItem = e.target.closest('.mxh-menu-item[data-action]');
+        if (!menuItem) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = menuItem.getAttribute('data-action');
+
+        if (action === 'switch-account') {
+            const accountId = parseInt(menuItem.getAttribute('data-account-id'));
+            if (currentContextCardId && accountId) {
+                flipCardToAccount(currentContextCardId, accountId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'add-sub-account') {
+            if (currentContextCardId) {
+                await createSubAccount(currentContextCardId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'status-active' || action === 'status-die') {
+            const newStatus = action.replace('status-', '');
+            if (currentContextAccountId) {
+                await updateAccountStatusNew(currentContextAccountId, newStatus);
+                hideCardContextMenu();
+            }
+        } else if (action === 'status-disabled') {
+            // Chỉ đổi sang disabled, không hide menu (để hiển thị submenu)
+            if (currentContextAccountId) {
+                await updateAccountStatusNew(currentContextAccountId, 'disabled');
+                hideCardContextMenu();
+            }
+        } else if (action === 'rescue-success' || action === 'rescue-failed') {
+            const result = action === 'rescue-success' ? 'success' : 'failed';
+            if (currentContextAccountId) {
+                await rescueAccountAction(currentContextAccountId, result);
+                hideCardContextMenu();
+            }
+        } else if (action === 'scan-wechat') {
+            if (currentContextAccountId) {
+                await scanWeChatAccount(currentContextAccountId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'reset-scan') {
+            if (currentContextAccountId) {
+                await resetScanCountNew(currentContextAccountId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'delete') {
+            // Check if it's primary account
+            const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+            if (account && account.is_primary) {
+                // Delete entire card
+                if (currentContextCardId) {
+                    await deleteCard(currentContextCardId);
+                    hideCardContextMenu();
+                }
+            } else {
+                // Delete only this account
+                if (currentContextAccountId) {
+                    await deleteSubAccount(currentContextAccountId);
+                    hideCardContextMenu();
+                }
+            }
+        } else if (action === 'edit') {
+            if (currentContextAccountId) {
+                openAccountModalForEdit(currentContextAccountId);
+                hideCardContextMenu();
+            }
+        } else if (action === 'copy-phone') {
+            const account = mxhAccounts.find(acc => acc.id === currentContextAccountId);
+            if (account && account.phone) {
+                navigator.clipboard.writeText(account.phone);
+                if (typeof showToast === 'function') {
+                    showToast(`Đã copy: ${account.phone}`, 'success');
+                }
+            }
+            hideCardContextMenu();
+        } else if (action === 'toggle-notice') {
+            if (currentContextAccountId) {
+                openNoticeModal(null); // Sử dụng function có sẵn
+                hideCardContextMenu();
+            }
+        } else if (action === 'cancel-notice') {
+            if (currentContextAccountId) {
+                await cancelNotice(currentContextAccountId);
+                hideCardContextMenu();
+            }
+        }
+    });
+
+    // === NEW: Create Sub-Account ===
+    async function createSubAccount(cardId) {
+        try {
+            const response = await fetch(`/mxh/api/cards/${cardId}/accounts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                const newAccount = await response.json();
+                mxhAccounts.push(newAccount);
+
+                // Flip to new account
+                flipCardToAccount(cardId, newAccount.id);
+
+                if (typeof showToast === 'function') {
+                    showToast('Đã tạo tài khoản phụ!', 'success');
+                }
+            } else {
+                throw new Error('Failed to create sub-account');
+            }
+        } catch (error) {
+            console.error('Error creating sub-account:', error);
+            if (typeof showToast === 'function') {
+                showToast('Lỗi tạo tài khoản phụ!', 'error');
+            }
+        }
+    }
+
+    // === NEW: Delete Card (và tất cả accounts) ===
+    async function deleteCard(cardId) {
+        if (!(await showConfirm('Xóa card này và tất cả tài khoản trên card?'))) return;
+
+        try {
+            const response = await fetch(`/mxh/api/cards/${cardId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // Remove from local state
+                mxhAccounts = mxhAccounts.filter(acc => acc.card_id !== cardId);
+                cardStates.delete(cardId);
+                scheduleRender();
+                if (typeof showToast === 'function') {
+                    showToast('Đã xóa card!', 'success');
+                }
+            } else {
+                throw new Error('Failed to delete card');
+            }
+        } catch (error) {
+            console.error('Error deleting card:', error);
+            if (typeof showToast === 'function') {
+                showToast('Lỗi xóa card!', 'error');
+            }
+        }
+    }
+
+    // === NEW: Delete Sub-Account ===
+    async function deleteSubAccount(accountId) {
+        if (!(await showConfirm('Xóa tài khoản phụ này?'))) return;
+
+        try {
+            const response = await fetch(`/mxh/api/sub_accounts/${accountId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // Remove from local state
+                mxhAccounts = mxhAccounts.filter(acc => acc.id !== accountId);
+                scheduleRender();
+                if (typeof showToast === 'function') {
+                    showToast('Đã xóa tài khoản phụ!', 'success');
+                }
+            } else {
+                throw new Error('Failed to delete sub-account');
+            }
+        } catch (error) {
+            console.error('Error deleting sub-account:', error);
+            if (typeof showToast === 'function') {
+                showToast('Lỗi xóa tài khoản phụ!', 'error');
+            }
+        }
+    }
+
+    // === NEW: Rescue Account Action ===
+    async function rescueAccountAction(accountId, result) {
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/rescue`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ result })
+            });
+
+            if (response.ok) {
+                // Update local state
+                const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (accountIndex !== -1) {
+                    if (result === 'success') {
+                        mxhAccounts[accountIndex].status = 'active';
+                        mxhAccounts[accountIndex].die_date = null;
+                        mxhAccounts[accountIndex].disabled_date = null;
+                        mxhAccounts[accountIndex].rescue_success_count = (mxhAccounts[accountIndex].rescue_success_count || 0) + 1;
+                    } else {
+                        mxhAccounts[accountIndex].rescue_count = (mxhAccounts[accountIndex].rescue_count || 0) + 1;
+                    }
+                }
+
+                scheduleRender();
+                const message = result === 'success' ? '✅ Cứu thành công!' : '📝 Đã ghi nhận cứu thất bại!';
+                if (typeof showToast === 'function') {
+                    showToast(message, 'success');
+                }
+            } else {
+                throw new Error('Failed to rescue account');
+            }
+        } catch (error) {
+            console.error('Error rescuing account:', error);
+            if (typeof showToast === 'function') {
+                showToast('Lỗi khi cứu tài khoản!', 'error');
+            }
+        }
+    }
+
+    // === NEW: Scan WeChat Account ===
+    async function scanWeChatAccount(accountId) {
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].wechat_scan_count = (mxhAccounts[accountIndex].wechat_scan_count || 0) + 1;
+            mxhAccounts[accountIndex].wechat_last_scan_date = new Date().toISOString();
+            scheduleRender();
+        }
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (response.ok) {
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        scheduleRender();
+                    }
+                }
+
+                if (typeof showToast === 'function') {
+                    showToast('✅ Đã ghi nhận quét WeChat!', 'success');
+                }
+            } else {
+                throw new Error('Failed to record scan');
+            }
+        } catch (error) {
+            console.error('Error scanning WeChat:', error);
+            if (typeof showToast === 'function') {
+                showToast('Lỗi khi quét WeChat!', 'error');
+            }
+        }
+    }
+
+
+    // === NEW: Update Account Status với die_date persist ===
+    async function updateAccountStatusNew(accountId, status) {
+        try {
+            const payload = { status };
+
+            // 🔍 If status is die, set die_date
+            if (status === 'die') {
+                payload.die_date = new Date().toISOString().split('T')[0];
+                payload.disabled_date = null;
+            } else if (status === 'disabled') {
+                // If status is disabled, set disabled_date
+                payload.disabled_date = new Date().toISOString().split('T')[0];
+                payload.die_date = null;
+            } else {
+                // For active status, clear both dates
+                payload.die_date = null;
+                payload.disabled_date = null;
+            }
+
+            const response = await fetch(`/mxh/api/accounts/${accountId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const updatedAccount = await response.json();
+
+                // Update local state
+                const index = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (index !== -1) {
+                    mxhAccounts[index] = updatedAccount;
+                }
+
+                scheduleRender();
+                if (typeof showToast === 'function') {
+                    showToast(`Đã cập nhật trạng thái: ${status}`, 'success');
+                }
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            if (typeof showToast === 'function') {
+                showToast(`Lỗi cập nhật trạng thái: ${error.message}`, 'error');
+            }
+        }
+    }
+
+    // Notice modal functions
+    let noticeTargetId = null;
+    function openNoticeModal(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (!currentContextAccountId) return;
+
+        noticeTargetId = currentContextAccountId;
+        document.getElementById('noticeTitle').value = 'Dưỡng';
+        document.getElementById('noticeDays').value = 30;
+        document.getElementById('noticeNote').value = '';
+
+        const modal = new bootstrap.Modal(document.getElementById('noticeModal'));
+        modal.show();
+    }
+
+    async function submitNotice() {
+        const title = document.getElementById('noticeTitle').value.trim();
+        const days = parseInt(document.getElementById('noticeDays').value, 10) || 0;
+        const note = document.getElementById('noticeNote').value.trim();
+
+        if (!noticeTargetId || !title || days <= 0) {
+            showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
+
+        try {
+            // Pause auto-refresh to prevent race condition
+            stopAutoRefresh();
+
+            const response = await fetch(`/mxh/api/accounts/${noticeTargetId}/notice`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, days, note })
+            });
+
+            if (response.ok) {
+                showToast('✅ Đã đặt thông báo!', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('noticeModal'));
+                modal.hide();
+
+                // Update local data immediately to trigger render
+                const account = mxhAccounts.find(a => a.id === noticeTargetId);
+                if (account) {
+                    const startDate = new Date();
+                    const dueDate = new Date(startDate);
+                    dueDate.setDate(dueDate.getDate() + days);
+
+                    account.notice = {
+                        enabled: true,
+                        title: title,
+                        days: days,
+                        note: note,
+                        start_at: startDate.toISOString(),
+                        due_date: dueDate.toISOString()
+                    };
+                    // console.log('✅ Updated local notice for account', noticeTargetId, account.notice);
+                }
+
+                // Force re-render with updated data
+                scheduleRender();
+
+                // Resume auto-refresh after render
+                setTimeout(() => startAutoRefresh(), 100);
+            } else {
+                showToast('Lỗi khi đặt thông báo!', 'error');
+                startAutoRefresh(); // Resume even on error
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            startAutoRefresh(); // Resume even on error
+        }
+        noticeTargetId = null;
+    }
+
+    async function clearNotice(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (!currentContextAccountId) return;
+
+        try {
+            // Pause auto-refresh to prevent race condition
+            stopAutoRefresh();
+
+            const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}/notice`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showToast('✅ Đã tắt thông báo!', 'success');
+
+                // Update local data immediately to trigger render
+                const account = mxhAccounts.find(a => a.id === currentContextAccountId);
+                if (account) {
+                    account.notice = null; // Set to null instead of empty object
+                    // console.log('✅ Cleared local notice for account', currentContextAccountId);
+                }
+
+                // Force re-render with updated data
+                scheduleRender();
+
+                // Resume auto-refresh after render
+                setTimeout(() => startAutoRefresh(), 100);
+            } else {
+                showToast('Lỗi khi xóa thông báo!', 'error');
+                startAutoRefresh(); // Resume even on error
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            startAutoRefresh(); // Resume even on error
+        }
+    }
+
+    // Alias for cancel notice from context menu
+    async function cancelNotice(accountId) {
+        currentContextAccountId = accountId;
+        await clearNotice(null);
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // NEW: Reset scan count for new context menu
+    async function resetScanCountNew(accountId) {
+        if (!accountId) return;
+
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].wechat_scan_count = 0;
+            mxhAccounts[accountIndex].wechat_last_scan_date = null;
+            scheduleRender();
+        }
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/scan`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reset: true })
+            });
+
+            if (response.ok) {
+                // Merge server response if available
+                const responseData = await response.json();
+                if (responseData && responseData.id) {
+                    const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                    if (idx !== -1) {
+                        mxhAccounts[idx] = responseData;
+                        scheduleRender();
+                    }
+                }
+                showToast('✅ Đã reset lượt quét!', 'success');
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    }
+
+    // Open modal for editing account (WeChat or Generic)
+    function openAccountModalForEdit(accountId) {
+        currentContextAccountId = accountId;
+        const account = mxhAccounts.find(acc => acc.id === accountId);
+
+        if (!account) return;
+
+        // Nếu là WeChat → mở WeChat modal, không thì mở generic modal
+        if (account.platform === 'wechat') {
+            openWeChatModal(accountId);
+        } else {
+            // Open generic modal for other platforms
+            document.getElementById('generic-username').value = account.login_username || '';
+            document.getElementById('generic-password').value = account.login_password || '';
+            document.getElementById('generic-display-name').value = account.username || '';
+            document.getElementById('generic-phone').value = account.phone || '';
+            document.getElementById('generic-url').value = account.url || '';
+
+            const modal = new bootstrap.Modal(document.getElementById('generic-account-modal'));
+            modal.show();
+        }
+    }
+
+    async function deleteAccount(accountId) {
+        // Instant local update - remove from array
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex !== -1) {
+            mxhAccounts.splice(accountIndex, 1);
+        }
+        scheduleRender();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showToast('✅ Đã xóa card!', 'success');
+
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    }
+
+    async function resetAccount(accountId) {
+        // Find the account and its card_id
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex === -1) {
+            console.error(`Account ${accountId} not found for reset`);
+            return;
+        }
+
+        const cardId = mxhAccounts[accountIndex].card_id;
+
+        // Instant local update - reset all data
+        const account = mxhAccounts[accountIndex];
+        mxhAccounts[accountIndex] = {
+            ...account, // Keep all existing fields
+            id: account.id,
+            card_id: account.card_id,
+            platform: account.platform,
+            group_id: account.group_id,
+            card_name: account.card_name,
+            is_primary: account.is_primary,
+            // Reset these fields
+            username: '.',
+            phone: '.',
+            status: 'active',
+            wechat_scan_count: 0,
+            wechat_last_scan_date: null,
+            die_date: null,
+            disabled_date: null,
+            rescue_count: 0,
+            rescue_success_count: 0,
+            notice: null,
+            muted_until: null
+        };
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: accountId });
+
+        scheduleRender();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/reset`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: accountId });
+                    console.log(`✅ Reset account ${accountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
+                showToast('✅ Đã reset card!', 'success');
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            console.error('Error resetting account:', error);
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    }
+
+    // Modal Button Handlers with instant updates
+    document.getElementById('mxh-save-account-btn').addEventListener('click', async () => {
+        const platform = document.getElementById('mxh-platform').value;
+        const username = (document.getElementById('mxh-username').value || '.').trim() || '.';
+        const password = (document.getElementById('mxh-password')?.value || '.').trim() || '.';
+        const phone = (document.getElementById('mxh-phone').value || '.').trim() || '.';
+        const url = (document.getElementById('mxh-url').value || '.').trim() || '.';
+        const day = parseInt(document.getElementById('mxh-day').value, 10);
+        const month = parseInt(document.getElementById('mxh-month').value, 10);
+        const year = parseInt(document.getElementById('mxh-year').value, 10);
+
+        // Chỉ bắt buộc: NỀN TẢNG + NGÀY/THÁNG/NĂM (đã auto-fill)
+        if (!platform || !day || !month || !year) {
+            showToast('Chọn Nền tảng và Ngày tạo!', 'error');
+            return;
+        }
+
+        try {
+            const groupId = await ensurePlatformGroup(platform);
+            const autoCardNumber = (await getNextCardNumber(groupId)).toString();
+
+            const res = await fetch('/mxh/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    card_name: autoCardNumber,
+                    group_id: groupId,
+                    platform,
+                    username,             // nếu trống đã là "."
+                    phone,
+                    url,
+                    login_username: ".",  // lưu cặp thông tin đăng nhập để hiện sau này
+                    login_password: password,
+                    wechat_created_day: day,
+                    wechat_created_month: month,
+                    wechat_created_year: year
+                })
+            });
+
+            if (res.ok) {
+                showToast('✅ Đã tạo card!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('mxh-addAccountModal')).hide();
+                await loadMXHData(false);
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Lỗi khi tạo tài khoản!', 'error');
+            }
+        } catch {
+            showToast('Lỗi kết nối!', 'error');
+        }
+    });
+
+    document.getElementById('wechat-apply-btn').addEventListener('click', async () => {
+        if (!currentContextAccountId) return;
+
+        const selectedStatus = document.getElementById('wechat-status').value;
+
+        // Get date value from single input and parse it
+        const dateValue = document.getElementById('wechat-date').value;
+        const dateParts = dateValue.split('/');
+        const day = parseInt(dateParts[0]) || 1;
+        const month = parseInt(dateParts[1]) || 1;
+        const year = parseInt(dateParts[2]) || 2024;
+
+        const data = {
+            card_name: document.getElementById('wechat-card-name').value,
+            username: document.getElementById('wechat-username').value,
+            phone: document.getElementById('wechat-phone').value,
+            wechat_created_day: day,
+            wechat_created_month: month,
+            wechat_created_year: year,
+            status: selectedStatus,  // Keep the status as-is: 'active', 'disabled', or 'die'
+            wechat_status: selectedStatus
+        };
+
+        // Find account and preserve card_id
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
+        }
+
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+        // Update local data immediately - preserve ALL existing properties
+        Object.assign(mxhAccounts[accountIndex], data);
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 WeChat Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
+
+        // Hide modal and re-render (preserves active account)
+        bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal')).hide();
+        scheduleRender();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
+                    console.log(`✅ Updated WeChat account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
+                showToast('✅ Đã cập nhật!', 'success');
+            } else {
+                const error = await response.json();
+                showToast(error.error || 'Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    });
+
+    document.getElementById('generic-account-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevent default form submission (browser refresh)
+        if (!currentContextAccountId) return;
+
+        const data = {
+            login_username: document.getElementById('generic-username').value,
+            login_password: document.getElementById('generic-password').value,
+            username: document.getElementById('generic-display-name').value,
+            phone: document.getElementById('generic-phone').value,
+            url: document.getElementById('generic-url').value
+        };
+
+        // Find account and preserve card_id
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+        if (accountIndex === -1) {
+            showToast('Lỗi: Không tìm thấy account!', 'error');
+            return;
+        }
+
+        const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+        // Instant local update
+        Object.keys(data).forEach(key => {
+            if (data[key] !== undefined && data[key] !== null) {
+                mxhAccounts[accountIndex][key] = data[key];
+            }
+        });
+
+        // *** CRITICAL: Ensure activeAccountId is set BEFORE rendering ***
+        setCardState(cardId, { activeAccountId: currentContextAccountId });
+        console.log(`🔧 Generic Apply: Updated account ${currentContextAccountId}, set as active for card ${cardId}`);
+        console.log(`   Account exists in mxhAccounts:`, !!mxhAccounts.find(a => a.id === currentContextAccountId));
+        console.log(`   Card accounts:`, mxhAccounts.filter(a => a.card_id === cardId).map(a => ({ id: a.id, is_primary: a.is_primary })));
+
+        bootstrap.Modal.getInstance(document.getElementById('generic-account-modal')).hide();
+        scheduleRender();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const updatedAccount = await response.json();
+                // Merge the server response back into local data
+                const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+                if (idx !== -1) {
+                    mxhAccounts[idx] = updatedAccount;
+                    // *** CRITICAL: Keep the account active after server update ***
+                    setCardState(cardId, { activeAccountId: currentContextAccountId });
+                    console.log(`✅ Updated generic account ${currentContextAccountId}, keeping it as active for card ${cardId}`);
+                    scheduleRender(); // Re-render with server data
+                }
+                showToast('✅ Đã cập nhật!', 'success');
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    });
+
+    document.getElementById('apply-card-number-btn').addEventListener('click', async () => {
+        if (!currentContextAccountId) return;
+
+        const newNumber = document.getElementById('new-card-number').value;
+        if (!newNumber) return;
+
+        // Instant local update
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
+        if (accountIndex !== -1) {
+            mxhAccounts[accountIndex].card_name = newNumber;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('change-card-number-modal')).hide();
+        scheduleRender();
+
+        try {
+            const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ card_name: newNumber })
+            });
+
+            if (response.ok) {
+                const updatedAccount = await response.json();
+                // Update all accounts with the same card_id to have the new card_name
+                const cardId = updatedAccount.card_id;
+                mxhAccounts.forEach((acc, idx) => {
+                    if (acc.card_id === cardId) {
+                        mxhAccounts[idx].card_name = newNumber;
+                    }
+                });
+                scheduleRender();
+                showToast('✅ Đã đổi số hiệu!', 'success');
+            } else {
+                showToast('Lỗi!', 'error');
+                await loadMXHData(false);
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false);
+        }
+    });
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        if (!currentContextAccountId) return;
+        await deleteAccount(currentContextAccountId);
+        bootstrap.Modal.getInstance(document.getElementById('delete-card-modal')).hide();
+    });
+
+    // Reset button handlers
+    document.getElementById('wechat-reset-btn').addEventListener('click', () => {
+        if (!currentContextAccountId) return;
+        const modal = new bootstrap.Modal(document.getElementById('reset-card-modal'));
+        modal.show();
+    });
+
+    document.getElementById('generic-reset-btn').addEventListener('click', () => {
+        if (!currentContextAccountId) return;
+        const modal = new bootstrap.Modal(document.getElementById('reset-card-modal'));
+        modal.show();
+    });
+
+    document.getElementById('confirm-reset-btn').addEventListener('click', async () => {
+        if (!currentContextAccountId) return;
+        await resetAccount(currentContextAccountId);
+
+        // Safely hide modals - check if instance exists first
+        const resetModal = bootstrap.Modal.getInstance(document.getElementById('reset-card-modal'));
+        if (resetModal) resetModal.hide();
+
+        const wechatModal = bootstrap.Modal.getInstance(document.getElementById('wechat-account-modal'));
+        if (wechatModal) wechatModal.hide();
+
+        const genericModal = bootstrap.Modal.getInstance(document.getElementById('generic-account-modal'));
+        if (genericModal) genericModal.hide();
+    });
+
+    document.getElementById('mxh-apply-view-mode-btn').addEventListener('click', () => {
+        const cardsPerRow = document.getElementById('mxh-cards-per-row').value;
+        localStorage.setItem('mxh_cards_per_row', cardsPerRow);
+
+        const style = document.getElementById('mxh-dynamic-style') || document.createElement('style');
+        style.id = 'mxh-dynamic-style';
+        style.innerHTML = `
+        #mxh-accounts-container .row > .col {
+            flex: 0 0 calc(100% / ${cardsPerRow});
+            max-width: calc(100% / ${cardsPerRow});
+        }
+    `;
+        if (!document.getElementById('mxh-dynamic-style')) {
+            document.head.appendChild(style);
+        }
+
+        showToast(`Đã áp dụng ${cardsPerRow} cards/hàng!`, 'success');
+        bootstrap.Modal.getInstance(document.getElementById('mxh-view-mode-modal')).hide();
+    });
+
+    // Initialize cards per row setting
+    (function initializeCardsPerRow() {
+        const savedCardsPerRow = localStorage.getItem('mxh_cards_per_row') || 12;
+        const cardsPerRowInput = document.getElementById('mxh-cards-per-row');
+        if (cardsPerRowInput) {
+            cardsPerRowInput.value = savedCardsPerRow;
+        }
+        const style = document.createElement('style');
+        style.id = 'mxh-dynamic-style';
+        style.innerHTML = `
+        #mxh-accounts-container .row > .col {
+            flex: 0 0 calc(100% / ${savedCardsPerRow});
+            max-width: calc(100% / ${savedCardsPerRow});
+        }
+    `;
+        document.head.appendChild(style);
+    })();
+
+
+    // Initialize - Load data and start auto-refresh
+    document.addEventListener('DOMContentLoaded', async () => {
+        // console.log('🚀 MXH Tab Initializing...');
+
+        // Initial load
+        await loadMXHData(true);
+
+        // Ensure groups are rendered after initial load
+        renderGroupsNav();
+
+        // Update main nav badge immediately
+        updateMainNavBadge();
+
+        // Backup: Force render groups after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            renderGroupsNav();
+            updateMainNavBadge();
+        }, 100);
+
+        // Start auto-refresh
+        startAutoRefresh();
+
+        // Pause auto-refresh when modal is opened
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('show.bs.modal', () => {
+                window.interactionPaused = true;
+                pauseAutoRefresh();
+            });
+            modal.addEventListener('hide.bs.modal', () => {
+                window.interactionPaused = false;
+                resumeAutoRefresh();
+            });
+        });
+
+        // Handle page visibility changes (pause when tab not visible)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoRefresh();
+                // console.log('⏸️ MXH Auto-refresh paused (tab hidden)');
+            } else {
+                startAutoRefresh();
+                loadMXHData(true); // Immediate refresh when tab becomes visible
+                // console.log('▶️ MXH Auto-refresh resumed (tab visible)');
+            }
+        });
+
+        // ===== THÊM VÀO TỪ ĐÂY =====
+        // Handle Filter Dropdown Clicks
+        const filterMenu = document.querySelector('.dropdown-menu[aria-labelledby="mxh-filter-btn"]');
+        if (filterMenu) {
+            filterMenu.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetItem = e.target.closest('.dropdown-item');
+                if (!targetItem) return;
+
+                const filterType = targetItem.dataset.filter;
+                if (!filterType) return;
+
+                activeFilter = filterType;
+
+                // Cập nhật giao diện nút
+                const filterButton = document.getElementById('mxh-filter-btn');
+                
+                // Xóa 'active' khỏi tất cả item
+                filterMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                // Thêm 'active' cho item được chọn
+                targetItem.classList.add('active');
+
+                if (filterType === 'default') {
+                    // Reset về mặc định
+                    filterButton.innerHTML = `<i class="bi bi-funnel me-1"></i> Lọc`;
+                    filterButton.classList.remove('btn-primary');
+                    filterButton.classList.add('btn-outline-secondary');
+                } else {
+                    // Hiển thị filter đang chọn
+                    filterButton.innerHTML = `<i class="bi bi-funnel-fill me-1"></i> ${targetItem.textContent.trim()}`;
+                    filterButton.classList.add('btn-primary');
+                    filterButton.classList.remove('btn-outline-secondary');
+                }
+
+                // Trigger re-render
+                scheduleRender();
+            });
+        }
+        // ===== THÊM VÀO ĐẾN ĐÂY =====
+
+        // console.log('✅ MXH Tab Ready - Real-time mode enabled!');
+    });
+
+    // Initialize tooltips function
+    function initializeTooltips() {
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+
+    // Open WeChat Modal Function
+    let _openWeChatModalLock = false;
+    window.openWeChatModal = function (accountId) {
+        if (_openWeChatModalLock) return;
+        _openWeChatModalLock = true;
+
+        const account = mxhAccounts.find(acc => acc.id === accountId);
+        if (!account) {
+            _openWeChatModalLock = false;
+            return;
+        }
+
+        currentContextAccountId = accountId;
+
+        const modalTitle = document.querySelector('#wechat-account-modal .modal-title');
+        modalTitle.innerHTML = '<i class="bi bi-wechat me-2"></i>Thông Tin Tài Khoản';
+
+        document.getElementById('wechat-card-name').value = account.card_name || '';
+        document.getElementById('wechat-username').value = account.username || '';
+        document.getElementById('wechat-phone').value = account.phone || '';
+
+        // Format date for display
+        const day = account.wechat_created_day || 1;
+        const month = account.wechat_created_month || 1;
+        const year = account.wechat_created_year || 2024;
+        document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+
+        const primaryStatus = account.status || 'active';
+        document.getElementById('wechat-status').value = primaryStatus;
+
+        const modal = new bootstrap.Modal(document.getElementById('wechat-account-modal'));
+        modal.show();
+
+        setTimeout(() => { _openWeChatModalLock = false; }, 300);
+    };
+
+    // ===== INLINE EDITING FUNCTIONS WITH INSTANT UPDATES =====
+
+    // Save inline edit when user clicks away or presses Enter
+    window.saveInlineEdit = async function (element, accountId, field) {
+        const newValue = element.textContent.trim();
+
+        // Remove emoji and extra characters for phone field
+        let cleanValue = newValue;
+        if (field === 'phone') {
+            cleanValue = newValue.replace(/[📞\s]/g, '');
+        }
+
+        // Get original value from account data
+        const account = mxhAccounts.find(acc => acc.id === accountId);
+        if (!account) return;
+
+        const originalValue = account[field] || '.';
+
+        // If empty or just "...", set to "."
+        if (!cleanValue || cleanValue === '...' || cleanValue === '...') {
+            cleanValue = '.';
+        }
+
+        // If unchanged, do nothing
+        if (cleanValue === originalValue) {
+            element.style.borderBottom = '1px dashed transparent';
+            return;
+        }
+
+        // Update via API
+        const success = await quickUpdateField(accountId, field, cleanValue);
+
+        if (success) {
+            // Update display with proper format
+            if (field === 'phone') {
+                element.textContent = `📞 ${cleanValue}`;
+            } else {
+                element.textContent = cleanValue;
+            }
+            // Re-render to update all cards showing this account
+            scheduleRender();
+        } else {
+            // Restore original on failure
+            if (field === 'phone') {
+                element.textContent = `📞 ${originalValue}`;
+            } else {
+                element.textContent = originalValue;
+            }
+        }
+
+        element.style.borderBottom = '1px dashed transparent';
+    };
+
+    // Quick update field (instant local update, debounced API call)
+    async function quickUpdateField(accountId, field, value) {
+        try {
+            // Find the account first
+            const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+            if (accountIndex === -1) {
+                console.error(`Account ${accountId} not found`);
+                return false;
+            }
+
+            const oldValue = mxhAccounts[accountIndex][field];
+
+            // ✅ normalize here
+            const cardId = Number(mxhAccounts[accountIndex].card_id);
+
+            // INSTANT LOCAL UPDATE - Update UI immediately
+            mxhAccounts[accountIndex][field] = value;
+
+            // *** CRITICAL: Set active account BEFORE rendering AND LOCK IT ***
+            setCardState(cardId, { activeAccountId: accountId }, true); // Lock state for 2 seconds
+            console.log(`🔧 Inline Edit (before API): Set card ${cardId} to show account ${accountId}`);
+
+            // Render mục tiêu cho 1 card khi chỉnh sửa nhanh
+            flipCardToAccount(cardId, accountId);
+
+            // API call in background using the existing PUT endpoint
+            const response = await fetch(`/mxh/api/accounts/${accountId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [field]: value
+                })
+            });
+
+            if (response.ok) {
+                const idx = mxhAccounts.findIndex(acc => acc.id === accountId);
+                if (idx !== -1) {
+                    const normalizedCardId = Number(mxhAccounts[idx].card_id); // ✅ normalize again
+                    const updatedAccount = await response.json();
+                    updatedAccount.card_id = normalizedCardId;                 // ensure card_id kept
+
+                    mxhAccounts[idx] = updatedAccount;
+
+                    setCardState(normalizedCardId, { activeAccountId: accountId }, true);
+                    scheduleRender();
+                }
+                showToast(`✅ Đã lưu ${field === 'username' ? 'tên' : 'SĐT'}!`, 'success');
+                return true;
+            } else {
+                // Revert on error
+                mxhAccounts[accountIndex][field] = oldValue;
+                const error = await response.json();
+                showToast(error.error || 'Lỗi khi cập nhật!', 'error');
+                scheduleRender();
+                return false;
+            }
+        } catch (error) {
+            console.error('Error in quickUpdateField:', error);
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false); // Reload to get correct data
+            return false;
+        }
+    }
+
+    // Setup contenteditable fields
+    function setupEditableFields() {
+        const editableFields = document.querySelectorAll('.editable-field');
+
+        editableFields.forEach(field => {
+            // Store original value
+            field.dataset.originalValue = field.textContent.trim();
+
+            // Handle Enter key - save and blur
+            field.addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    field.blur();
+                }
+            });
+
+            // Handle Escape key - cancel and restore
+            field.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    field.textContent = field.dataset.originalValue;
+                    field.blur();
+                }
+            });
+
+            // Handle blur - save changes
+            field.addEventListener('blur', async (e) => {
+                let newValue = e.target.textContent.trim();
+                const accountId = parseInt(e.target.dataset.accountId);
+                const fieldName = e.target.dataset.field;
+
+                // Remove emoji prefix for phone
+                if (fieldName === 'phone') {
+                    newValue = newValue.replace(/^📞\s*/, '').trim();
+                }
+
+                // Check if value is the same or if it's just the placeholder being edited (and not real data)
+                const isNoChange = newValue === field.dataset.originalValue ||
+                    (newValue === '' && field.dataset.originalValue === '.') ||
+                    (newValue === 'Click để nhập' && field.dataset.originalValue === ''); // NEW CHECK
+
+                if (isNoChange) {
+                    // Restore the visual placeholder if needed
+                    if (fieldName === 'phone') {
+                        e.target.textContent = field.dataset.originalValue ? `📞 ${field.dataset.originalValue}` : '📞 Click để nhập';
+                    } else {
+                        e.target.textContent = field.dataset.originalValue || 'Click để nhập';
+                    }
+                    return;
+                }
+
+                // If the value is a placeholder 'Click để nhập', treat as empty string '.'
+                if (newValue === 'Click để nhập') {
+                    newValue = '.'; // Use '.' as the internal empty value marker, as seen in POST requests
+                }
+
+                // Save to backend
+                const success = await quickUpdateField(accountId, fieldName, newValue);
+
+                if (success) {
+                    field.dataset.originalValue = newValue;
+                    // Update display with emoji if phone
+                    if (fieldName === 'phone') {
+                        e.target.textContent = `📞 ${newValue}`;
+                    }
+                } else {
+                    // Restore original value on failure
+                    if (fieldName === 'phone') {
+                        e.target.textContent = field.dataset.originalValue ? `📞 ${field.dataset.originalValue}` : '📞 Click để nhập';
+                    } else {
+                        e.target.textContent = field.dataset.originalValue || 'Click để nhập';
+                    }
+                }
+            });
+
+            // Select all text on focus
+            field.addEventListener('focus', (e) => {
+                // Remove emoji prefix for easier editing
+                if (e.target.dataset.field === 'phone') {
+                    const phone = e.target.textContent.replace(/^📞\s*/, '').replace('Click để nhập', '').trim();
+                    e.target.textContent = phone;
+                } else if (e.target.textContent.trim() === 'Click để nhập') {
+                    e.target.textContent = '';
+                }
+
+                // Select all text
+                setTimeout(() => {
+                    const range = document.createRange();
+                    range.selectNodeContents(e.target);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }, 0);
+            });
+        });
+    }
+
+    // Toggle account status (click on status to change) - INSTANT UPDATE NO RELOAD
+    window.toggleAccountStatus = async function (event, accountId) {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Find the account and update locally FIRST (instant UI update)
+        const accountIndex = mxhAccounts.findIndex(acc => acc.id === accountId);
+        if (accountIndex === -1) return;
+
+        const currentStatus = mxhAccounts[accountIndex].status;
+
+        // Toggle status locally
+        const newStatus = currentStatus === 'disabled' ? 'active' : 'disabled';
+        mxhAccounts[accountIndex].status = newStatus;
+
+        // 🔍 Update disabled_date when toggling disabled status
+        if (newStatus === 'disabled') {
+            mxhAccounts[accountIndex].disabled_date = new Date().toISOString();
+            mxhAccounts[accountIndex].die_date = null;
+        } else {
+            mxhAccounts[accountIndex].disabled_date = null;
+            mxhAccounts[accountIndex].die_date = null;
+        }
+
+        // Re-render immediately (no API call wait)
+        scheduleRender();
+
+        // Then update backend in background
+        try {
+            const response = await fetch(`/mxh/api/accounts/${accountId}/toggle-status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                showToast('✅ Đã thay đổi trạng thái!', 'success');
+            } else {
+                // Revert on error
+                const error = await response.json();
+                showToast(error.error || 'Lỗi khi thay đổi trạng thái!', 'error');
+                await loadMXHData(false); // Reload to get correct data
+            }
+        } catch (error) {
+            showToast('Lỗi kết nối!', 'error');
+            await loadMXHData(false); // Reload to get correct data
+        }
+    };
+
+    // ===== MXH BACKGROUND CONTEXT MENU =====
+    document.getElementById('mxh-accounts-container').addEventListener('contextmenu', function (event) {
+        // Only show if clicked on the container itself, not on cards
+        if (event.target.id === 'mxh-accounts-container' || event.target.closest('.row')) {
+            event.preventDefault();
+
+            // Hide all other context menus
+            document.querySelectorAll('.custom-context-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+
+            // Show background context menu
+            const contextMenu = document.getElementById('mxh-background-context-menu');
+            contextMenu.style.display = 'block';
+
+            // Smart positioning to avoid overflow
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+
+            // Calculate menu size and viewport
+            let menuRect = contextMenu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const margin = 8;
+
+            let left = event.pageX;
+            let top = event.pageY;
+
+            // Horizontal positioning: Smart left/right positioning
+            if (menuRect.right > viewportWidth - margin) {
+                // Menu will overflow right side of screen
+                // Show menu to the left of mouse
+                left = event.pageX - menuRect.width;
+
+                // If still overflows left, clamp to left margin
+                if (left < margin) {
+                    left = margin;
+                }
+            }
+
+            // Vertical positioning
+            if (menuRect.bottom > viewportHeight) {
+                // Nếu đủ chỗ phía trên chuột thì show lên trên
+                if (event.pageY - menuRect.height > margin) {
+                    top = event.pageY - menuRect.height;
+                } else {
+                    // Nếu không đủ chỗ trên, thì dán sát đáy viewport
+                    top = viewportHeight - menuRect.height - margin + window.scrollY;
+                    if (top < margin + window.scrollY) top = margin + window.scrollY;
+                }
+            }
+
+            contextMenu.style.left = left + 'px';
+            contextMenu.style.top = top + 'px';
+        }
+    });
+
+    // Handle background context menu actions
+    document.getElementById('mxh-background-context-menu').addEventListener('click', function (event) {
+        const action = event.target.closest('.menu-item')?.dataset.action;
+
+        if (action === 'view-mode') {
+            // Open view mode modal
+            const modal = new bootstrap.Modal(document.getElementById('view-mode-modal'));
+            modal.show();
+        } else if (action === 'add-account') {
+            // Open add account modal
+            const modal = new bootstrap.Modal(document.getElementById('mxh-addAccountModal'));
+            modal.show();
+        }
+
+        // Hide menu
+        this.style.display = 'none';
+    });
+
+    // Hide all context menus on regular click
+    document.addEventListener('click', function (event) {
+        // Don't hide if clicking inside a context menu
+        if (!event.target.closest('.custom-context-menu')) {
+            document.querySelectorAll('.custom-context-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+
+            // Hide all submenus and clear state
+            document.querySelectorAll('.submenu').forEach(submenu => {
+                submenu.classList.remove('show');
+            });
+            currentSubmenu = null;
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+                hideTimeout = null;
+            }
+        }
+    });
+
+    // ===== SMART SUBMENU POSITIONING =====
+    // Function to position submenu smartly
+    function positionSubmenu(menuItem) {
+        const submenu = menuItem.querySelector('.submenu');
+        if (!submenu) return;
+
+        // Temporarily show submenu to measure it
+        submenu.style.display = 'block';
+        submenu.style.visibility = 'hidden';
+
+        const submenuRect = submenu.getBoundingClientRect();
+        const parentMenu = menuItem.closest('.custom-context-menu');
+        const parentMenuRect = parentMenu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const margin = 8;
+
+        // Calculate where submenu would appear if positioned normally (right side)
+        const normalSubmenuRight = parentMenuRect.right + submenuRect.width;
+
+        // Check if submenu would overflow right side of viewport
+        if (normalSubmenuRight > viewportWidth - margin) {
+            // Show submenu on the left side
+            submenu.classList.add('submenu-left');
+            // console.log('Submenu positioned LEFT - would overflow right');
+        } else {
+            // Show submenu on the right side (default)
+            submenu.classList.remove('submenu-left');
+            // console.log('Submenu positioned RIGHT - fits in viewport');
+        }
+
+        // Hide submenu again (CSS hover will show it)
+        submenu.style.display = '';
+        submenu.style.visibility = '';
+    }
+
+    // Enhanced submenu hover handling with bridge support
+    let currentSubmenu = null;
+    let hideTimeout = null;
+
+    // Function to create bridge element
+    function createSubmenuBridge(submenu, isLeft = false) {
+        // Remove existing bridge
+        const existingBridge = submenu.querySelector('.submenu-bridge');
+        if (existingBridge) {
+            existingBridge.remove();
+        }
+
+        // Create new bridge
+        const bridge = document.createElement('div');
+        bridge.className = 'submenu-bridge';
+        if (isLeft) {
+            bridge.style.left = '-5px';
+            bridge.style.right = 'auto';
+        }
+        submenu.appendChild(bridge);
+        return bridge;
+    }
+
+    // Function to show submenu
+    function showSubmenu(menuItem) {
+        // Hide previous submenu
+        if (currentSubmenu && currentSubmenu !== menuItem) {
+            const prevSubmenu = currentSubmenu.querySelector('.submenu');
+            if (prevSubmenu) {
+                prevSubmenu.classList.remove('show');
+            }
+        }
+
+        // Show new submenu
+        const submenuEl = menuItem.querySelector('.submenu');
+        if (submenuEl) {
+            positionSubmenu(menuItem);
+            submenuEl.classList.add('show');
+            currentSubmenu = menuItem;
+
+            // Create bridge based on position
+            const isLeft = submenuEl.classList.contains('submenu-left');
+            createSubmenuBridge(submenuEl, isLeft);
+        }
+
+        // Clear any pending hide timeout
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            hideTimeout = null;
+        }
+    }
+
+    // Function to hide submenu with delay
+    function hideSubmenu(delay = 100) {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+        }
+        hideTimeout = setTimeout(() => {
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.remove('show');
+                }
+                currentSubmenu = null;
+            }
+        }, delay);
+    }
+
+    // Event listeners
+    document.addEventListener('mouseover', function (event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        const bridge = event.target.closest('.submenu-bridge');
+
+        if (menuItem) {
+            showSubmenu(menuItem);
+        } else if (submenu || bridge) {
+            // Keep submenu open when hovering over submenu or bridge
+            if (currentSubmenu) {
+                const submenuEl = currentSubmenu.querySelector('.submenu');
+                if (submenuEl) {
+                    submenuEl.classList.add('show');
+                }
+                if (hideTimeout) {
+                    clearTimeout(hideTimeout);
+                    hideTimeout = null;
+                }
+            }
+        }
+    });
+
+    document.addEventListener('mouseout', function (event) {
+        const menuItem = event.target.closest('.menu-item.has-submenu');
+        const submenu = event.target.closest('.submenu');
+        const bridge = event.target.closest('.submenu-bridge');
+
+        if (!menuItem && !submenu && !bridge) {
+            // Hide submenu when leaving all related elements
+            hideSubmenu();
+        }
+    });
+
+    // Also position submenus when context menu is shown
+    function positionAllSubmenus(menuId) {
+        setTimeout(() => {
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                const submenuItems = menu.querySelectorAll('.menu-item.has-submenu');
+                submenuItems.forEach(positionSubmenu);
+            }
+        }, 10);
+    }
+
+    // ===== AUTO-FILL DATE WHEN OPENING ADD ACCOUNT MODAL =====
+    const mxhAddAccountModal = document.getElementById('mxh-addAccountModal');
+    if (mxhAddAccountModal) {
+        mxhAddAccountModal.addEventListener('shown.bs.modal', function () {
+            // Get current date
+            const today = new Date();
+            const day = today.getDate();
+            const month = today.getMonth() + 1; // JavaScript months are 0-indexed
+            const year = today.getFullYear();
+
+            // Auto-fill date inputs
+            document.getElementById('mxh-day').value = day;
+            document.getElementById('mxh-month').value = month;
+            document.getElementById('mxh-year').value = year;
+
+            // Clear other fields
+            document.getElementById('mxh-username').value = '';
+            document.getElementById('mxh-platform').value = '';
+            document.getElementById('mxh-password').value = '';
+            document.getElementById('mxh-phone').value = '';
+            document.getElementById('mxh-url').value = '';
+        });
+    }
+
+    // ===== AUTO-FILL DATE WHEN OPENING WECHAT MODAL (for adding new) =====
+    const wechatAccountModal = document.getElementById('wechat-account-modal');
+    if (wechatAccountModal) {
+        wechatAccountModal.addEventListener('shown.bs.modal', function () {
+            // Only auto-fill if it's a new account (all fields empty)
+            const cardName = document.getElementById('wechat-card-name').value;
+            const username = document.getElementById('wechat-username').value;
+
+            // If both are empty, it's likely a new account
+            if (!cardName && !username) {
+                const today = new Date();
+                const day = today.getDate();
+                const month = today.getMonth() + 1;
+                const year = today.getFullYear();
+
+                // Auto-fill date input only if it's empty
+                if (!document.getElementById('wechat-date').value) {
+                    document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                }
+            }
+        });
+    }
+
+    // ===== AUTO-FORMAT DATE INPUT =====
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateInput = document.getElementById('wechat-date');
+
+        if (dateInput) {
+            dateInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+
+                if (value.length >= 2) {
+                    value = value.slice(0, 2) + '/' + value.slice(2);
+                }
+                if (value.length >= 5) {
+                    value = value.slice(0, 5) + '/' + value.slice(5, 9);
+                }
+
+                e.target.value = value;
+            });
+
+            // Handle backspace
+            dateInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace') {
+                    const cursorPos = this.selectionStart;
+                    const value = this.value;
+
+                    // If cursor is right after a slash, move it before the slash
+                    if (cursorPos > 0 && value[cursorPos - 1] === '/') {
+                        e.preventDefault();
+                        this.setSelectionRange(cursorPos - 1, cursorPos - 1);
+                    }
+                }
+            });
+
+            // Handle paste
+            dateInput.addEventListener('paste', function (e) {
+                e.preventDefault();
+                let pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+
+                if (pastedData.length >= 8) {
+                    const day = pastedData.slice(0, 2);
+                    const month = pastedData.slice(2, 4);
+                    const year = pastedData.slice(4, 8);
+                    this.value = day + '/' + month + '/' + year;
+                } else if (pastedData.length >= 4) {
+                    const day = pastedData.slice(0, 2);
+                    const month = pastedData.slice(2, 4);
+                    this.value = day + '/' + month + '/';
+                } else {
+                    this.value = pastedData;
+                }
+            });
+        }
+    });
+
+    // ===== NOTICE PREVIEW SYSTEM =====
+    (() => {
+        // ===== Config endpoint (có fallback để tránh 404) =====
+        const ENDPOINTS = {
+            getNotice: [
+                '/mxh/api/notice',
+                '/mxh/notice',
+                '/api/mxh/notice'
+            ],
+            disableNotice: [
+                '/mxh/api/notice/disable',
+                '/mxh/notice/disable',
+                '/api/mxh/notice/disable'
+            ]
+        };
+        let cachedGetURL = null;
+        let cachedDisableURL = null;
+
+        // ===== State =====
+        let $preview = null;
+        let $badge = null;
+        let hoverEnterTimer = null;
+        let hoverLeaveTimer = null;
+        let actionDocClickBound = false;
+
+        const ENTER_DELAY = 80;   // ms: tránh rung khi lia chuột nhanh
+        const LEAVE_DELAY = 160;  // ms: cho phép di từ badge -> preview
+
+        // ===== Utils =====
+        const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+        function clearTimers() {
+            if (hoverEnterTimer) { clearTimeout(hoverEnterTimer); hoverEnterTimer = null; }
+            if (hoverLeaveTimer) { clearTimeout(hoverLeaveTimer); hoverLeaveTimer = null; }
+        }
+
+        function closePreview(force = false) {
+            clearTimers();
+            if (!$preview) return;
+            // nếu đang action mode, chỉ đóng khi force hoặc click outside
+            $preview.classList.remove('show');
+            const el = $preview;
+            $preview = null;
+            $badge = null;
+            setTimeout(() => el.remove(), 120);
+            if (actionDocClickBound) {
+                document.removeEventListener('click', onDocumentClick, true);
+                actionDocClickBound = false;
+            }
+        }
+
+        function onDocumentClick(e) {
+            if (!$preview || !$badge) return;
+            if (e.target.closest('.notice-preview') || e.target.closest('.notice-badge')) return;
+            // click ngoài khi đang action -> đóng
+            closePreview(true);
+        }
+
+        function placePreview(box, badge) {
+            const r = badge.getBoundingClientRect();
+            const boxH = box.offsetHeight || 200;
+            const boxW = box.offsetWidth || 200;
+
+            // Auto width positioning - center relative to badge
+            const desiredLeft = Math.max(8, Math.min(r.left - (boxW - r.width) / 2, window.innerWidth - boxW - 8));
+
+            let top = r.bottom + 10;
+            if (top + boxH > window.innerHeight - 8) {
+                top = Math.max(8, r.top - boxH - 12);
+                box.style.setProperty('--arrow-top', (boxH - 6) + 'px');
+            } else {
+                box.style.setProperty('--arrow-top', '-8px');
+            }
+
+            // Arrow positioning relative to badge center
+            const arrowLeft = Math.min(Math.max(r.left + r.width / 2 - desiredLeft - 6, 10), boxW - 22);
+            box.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+            box.style.left = desiredLeft + 'px';
+            box.style.top = top + 'px';
+        }
+
+        async function tryFetch(urls, init) {
+            let lastErr;
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url, init);
+                    if (res.ok) return { res, url };
+                    lastErr = new Error(`HTTP ${res.status} @ ${url}`);
+                    if (res.status === 404) continue;
+                    throw lastErr;
+                } catch (e) { lastErr = e; continue; }
+            }
+            throw lastErr || new Error('No endpoint matched');
+        }
+
+        async function getNoticeData(accountId, badge) {
+            const raw = badge?.dataset?.noticeCache;
+            if (raw) { try { return JSON.parse(raw); } catch { } }
+            const q = `?account_id=${encodeURIComponent(accountId)}`;
+            const urls = cachedGetURL ? [cachedGetURL + q] : ENDPOINTS.getNotice.map(u => u + q);
+            const { res, url } = await tryFetch(urls, { headers: { 'Accept': 'application/json' } });
+            cachedGetURL = url.replace(q, '');
+            return await res.json();
+        }
+
+        async function disableNotice(accountId, noticeId) {
+            const body = noticeId ? { notice_id: noticeId } : { account_id: accountId };
+            const urls = cachedDisableURL ? [cachedDisableURL] : ENDPOINTS.disableNotice;
+            const { res, url } = await tryFetch(urls, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            cachedDisableURL = url;
+            if (!res.ok) throw new Error('Disable notice failed: ' + res.status);
+            return await res.json().catch(() => ({}));
+        }
+
+        function buildPreviewDOM(data, badgeType, mode /* 'hover' | 'action' */) {
+            const box = document.createElement('div');
+            box.className = 'notice-preview' + (mode === 'action' ? ' action' : '');
+
+            const title = data?.title || (badgeType === 'anniversary' ? 'Đủ tuổi 1 năm' : 'Thông báo đến hạn');
+            const meta = data?.due_human ? `Đến hạn: ${data.due_human}` :
+                (data?.due_at ? `Đến hạn: ${new Date(data.due_at).toLocaleString()}` :
+                    (badgeType === 'anniversary' ? 'Mốc tuổi tài khoản: 1 năm' : ''));
+            const msg = data?.message || (badgeType === 'anniversary' ? 'Tài khoản đã đủ tuổi 1 năm' : '(Không có nội dung)');
+
+            box.innerHTML = `
+                <div class="title">${escapeHtml(title)}</div>
+                <div class="meta">${escapeHtml(meta)}</div>
+                <div class="content">${escapeHtml(msg)}</div>
+                <div class="actions">
+                    <button type="button" class="btn btn-off">Tắt Thông Báo</button>
+                    <button type="button" class="btn btn-ok">Ok</button>
+                </div>
+            `;
+
+            // hành vi nút (chỉ hữu dụng ở mode 'action'; ở 'hover' .actions bị CSS ẩn)
+            box.querySelector('.btn-ok').addEventListener('click', () => closePreview(true));
+            box.querySelector('.btn-off').addEventListener('click', async () => {
+                try {
+                    const accId = $badge?.dataset.accountId;
+                    const noticeId = $badge?.dataset.noticeId;
+                    await disableNotice(accId, noticeId);
+                    // Ẩn badge
+                    $badge.style.display = 'none';
+                    closePreview(true);
+                } catch (err) {
+                    console.error(err);
+                    showAlert('Tắt thông báo thất bại (kiểm tra route backend)');
+                }
+            });
+
+            // hover-intent: không đóng khi rê chuột vào preview
+            box.addEventListener('mouseover', () => { if (hoverLeaveTimer) { clearTimeout(hoverLeaveTimer); hoverLeaveTimer = null; } });
+            box.addEventListener('mouseout', (e) => {
+                if (!box.contains(e.relatedTarget) && (!$badge || !$badge.contains(e.relatedTarget))) {
+                    scheduleClose();
+                }
+            });
+
+            return box;
+        }
+
+        function scheduleOpen(badge, mode) {
+            clearTimers();
+            hoverEnterTimer = setTimeout(async () => {
+                // nếu đã mở cho badge khác -> đóng
+                if ($preview && $badge && $badge !== badge) closePreview(true);
+
+                $badge = badge;
+
+                // dữ liệu
+                const badgeType = badge.dataset.badgeType || 'due';
+                let data = null;
+                try {
+                    data = await getNoticeData(badge.dataset.accountId, badge);
+                } catch (err) {
+                    if (badgeType !== 'anniversary') {
+                        console.error(err);
+                        data = { title: 'Thông báo đến hạn', message: 'Không lấy được nội dung', due_human: '' };
+                    }
+                }
+
+                // nếu đã có preview -> chỉ chuyển mode
+                if ($preview) {
+                    $preview.classList.toggle('action', mode === 'action');
+                } else {
+                    $preview = buildPreviewDOM(data, badgeType, mode);
+                    document.body.appendChild($preview);
+                }
+
+                // đo & đặt vị trí
+                $preview.style.visibility = 'hidden';
+                $preview.classList.add('show');
+                placePreview($preview, badge);
+                $preview.style.visibility = '';
+
+                // khi đang action, bật click-outside
+                if (mode === 'action' && !actionDocClickBound) {
+                    document.addEventListener('click', onDocumentClick, true);
+                    actionDocClickBound = true;
+                }
+            }, ENTER_DELAY);
+        }
+
+        function scheduleClose() {
+            clearTimers();
+            hoverLeaveTimer = setTimeout(() => {
+                // chỉ đóng tự động nếu không ở action mode
+                if ($preview && !$preview.classList.contains('action')) {
+                    closePreview();
+                }
+            }, LEAVE_DELAY);
+        }
+
+        // ===== Hover logic trên badge (dùng mouseover/mouseout để delegation) =====
+        document.addEventListener('mouseover', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+            if (b.contains(e.relatedTarget)) return; // vẫn ở trong badge
+            // mở ở chế độ 'hover' (không hiện nút)
+            scheduleOpen(b, 'hover');
+        }, true);
+
+        document.addEventListener('mouseout', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+            if (b.contains(e.relatedTarget)) return; // vẫn ở trong badge
+            // nếu không di vào preview thì đóng theo delay
+            if (!$preview || ($preview && !$preview.contains(e.relatedTarget))) {
+                scheduleClose();
+            }
+        }, true);
+
+        // ===== Click trên badge -> chuyển sang 'action' (hiện 2 nút) =====
+        document.addEventListener('click', (e) => {
+            const b = e.target.closest('.notice-badge');
+            if (!b) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // nếu đang mở preview cho badge này -> chỉ chuyển mode sang action
+            if ($preview && $badge === b) {
+                $preview.classList.add('action');
+                if (!actionDocClickBound) {
+                    document.addEventListener('click', onDocumentClick, true);
+                    actionDocClickBound = true;
+                }
+                return;
+            }
+
+            // chưa mở: mở ngay 'action'
+            scheduleOpen(b, 'action');
+        }, true);
+
+        // viewport thay đổi -> reposition
+        window.addEventListener('scroll', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
+        window.addEventListener('resize', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
+    })();
+
+</script>
+{% endblock %}

@@ -1,0 +1,1175 @@
+/* app/static/css/style.css */
+
+/* Custom styles for Kcal Calculator Header */
+#healthy-v-pills-kcal .card-header {
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+}
+
+#kcal-totals-header {
+    font-size: 1.25rem;
+    /* Match h5 font-size */
+}
+
+/* Decrease height of food category headers */
+#kcal-container .card-header {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+}
+
+:root {
+    --dark-bg: #1a1d21;
+    --card-bg: #2c303a;
+    --border-color: #444a59;
+    --text-color: #e6e6e6;
+    --primary-color: #0d6efd;
+    --hover-color: #3d4453;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    padding: 1rem;
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh; /* Mở rộng full chiều cao màn hình */
+    margin: 0; /* Xóa margin mặc định */
+}
+
+.main-nav .nav-link {
+    font-weight: 500;
+    color: var(--text-color);
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+.main-nav .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: #fff !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    min-height: 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+.tab-content {
+    border: 1px solid var(--border-color);
+    border-top: none;
+    padding: 0;
+    border-radius: 0 0 0.375rem 0.375rem;
+    background-color: var(--card-bg);
+}
+
+/* Nền màu cho container-fluid trong tab MXH */
+.tab-content .container-fluid {
+    background-color: #1a1a1a; /* Nền màu container MXH */
+    min-height: calc(100vh - 65px); /* Mở rộng full chiều cao trừ navbar */
+}
+
+/* Nền màu cho navbar */
+body .container-fluid {
+    background-color: #0f0f0fbb; /* Nền màu navbar */
+}
+
+.tool-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    transition: transform 0.25s cubic-bezier(.4, 2, .6, 1), box-shadow 0.25s, border-color 0.2s;
+    cursor: pointer;
+    height: 100%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    position: relative;
+    overflow: visible;
+}
+
+.tool-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.25), 0 16px 40px rgba(0, 0, 0, 0.45);
+    border-color: #00e0ff;
+}
+
+.tool-card::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0, 224, 255, 0.18) 0%, rgba(0, 224, 255, 0) 80%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 0;
+}
+
+.tool-card:hover::before {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.tool-card .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 1rem auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00e0ff 0%, #3a7bd5 100%);
+    box-shadow: 0 4px 16px rgba(0, 224, 255, 0.18);
+    font-size: 2.5rem;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+}
+
+/* Blinking Animation for Filtered Cards */
+@keyframes blink-border {
+
+    0%,
+    100% {
+        border-color: #ffc107;
+        box-shadow: 0 0 10px #ffc107;
+    }
+
+    50% {
+        border-color: #00e0ff;
+        box-shadow: 0 0 20px #00e0ff;
+    }
+}
+
+.card-blinking {
+    animation: blink-border 1.5s infinite !important;
+}
+
+.table {
+    --bs-table-bg: #2d2d2d;
+    --bs-table-border-color: #404040;
+    vertical-align: middle;
+}
+
+.table .badge {
+    background-color: #6c757d;
+    color: white;
+}
+
+.table thead th {
+    color: #ffffff !important;
+    background-color: #374151;
+    font-weight: bold;
+}
+
+.table tbody td {
+    color: #f8f9fa !important;
+}
+
+.form-control,
+.form-select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: var(--text-color);
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+/* --- Floating Nav Card Styles --- */
+.main-nav.nav-tabs {
+    border-bottom: none;
+    padding: 5px 0;
+}
+
+.main-nav .nav-link {
+    border: none;
+    background-color: transparent;
+    border-radius: 10px;
+    margin: 0 5px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    box-shadow: none;
+}
+
+.nav-tabs .nav-link {
+    margin-bottom: 0;
+    border-bottom-color: transparent;
+}
+
+.main-nav .nav-link:not(.active):hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    border-color: transparent;
+    background-color: rgba(0, 224, 255, 0.1);
+}
+
+.main-nav .nav-link.active {
+    transform: translateY(-2px);
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(13, 110, 253, 0.5), 0 4px 10px rgba(13, 110, 253, 0.3);
+    border-color: transparent;
+    background-color: var(--primary-color) !important;
+}
+
+.main-nav .nav-link {
+    display: flex;
+    align-items: center;
+}
+
+.nav-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+
+.custom-context-menu .menu-item {
+    padding: 0.9rem 1.5rem;
+    /* Tăng 50% */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.custom-context-menu .menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+/* Utilities Modal Styles */
+#utilitiesModal .modal-dialog {
+    max-width: 550px;
+}
+
+#utilitiesModal .form-check-label {
+    user-select: none;
+}
+
+
+.custom-context-menu .menu-item {
+    padding: 0.585rem 0.975rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.custom-context-menu .menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+.custom-context-menu .menu-item.has-submenu {
+    justify-content: space-between;
+}
+
+.custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border: 1px solid #444a59;
+    z-index: 10001;
+}
+
+.custom-context-menu .submenu.submenu-left {
+    left: auto;
+    right: 100%;
+}
+
+.custom-context-menu .submenu.show {
+    display: block;
+}
+
+.custom-context-menu .submenu .menu-item {
+    padding: 4px 6px;
+}
+
+/* Notice indicator styles */
+.notice-indicator { 
+    animation: none; 
+}
+
+.notice-indicator.blink { 
+    animation: blink 1s infinite; 
+}
+
+@keyframes blink { 
+    0%,100% {opacity:1;} 
+    50% {opacity:0.2;} 
+}
+
+/* Notice line styles - follow MXH_OLD */
+.notice-line{
+    margin-top:6px;
+    font-weight:600;
+    color:#ff8c00;
+    font-size:.72rem;
+    text-align:center;
+}
+.notice-line.expired{
+    color:#ff4d4f;
+}
+.notice-expired-blink{
+    animation:border-blink 1s linear infinite;
+    border:2px solid #ff4d4f!important;
+    border-radius:10px;
+}
+@keyframes border-blink{
+    0%,100%{box-shadow:0 0 0 0 rgba(255,77,79,.8)}
+    50%{box-shadow:0 0 12px 2px rgba(255,77,79,.9)}
+}
+.notice-tooltip{
+    position:absolute;
+    right:8px;
+    top:28px;
+    z-index:3;
+    display:none;
+    background:#2c3340;
+    border:1px solid #444a59;
+    border-radius:8px;
+    padding:6px 10px;
+    min-width:180px;
+}
+.notice-tooltip-title{
+    font-weight:700;
+    color:#fff;
+    font-size:.8rem;
+    margin:0;
+}
+.notice-tooltip-time{
+    font-size:.75rem;
+    color:#bbb;
+}
+.notice-tooltip-note{
+    font-size:.7rem;
+    line-height:1.3;
+    margin:.2rem 0 0 0;
+    color:#ccc;
+}
+.notice-tooltip-note:empty{
+    display:none!important;
+}
+
+/* ===== NOTES LAYOUT STYLES ===== */
+/* New Layout System with Animation */
+.notes-layout-container {
+    display: flex;
+    gap: 1rem;
+    background-color: #1b1b1bd3; /* Nền màu khung nội dung ghi chú */
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+#notes-list-wrapper {
+    flex-grow: 1;
+    width: 100%;
+    transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper {
+    flex-shrink: 0;
+    width: 0;
+    transform: translateX(30px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+#notes-detail-wrapper.visible {
+    width: 66.666667%;
+    /* Panel now takes up 2/3 of the space */
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+}
+
+#notes-list-wrapper.shrunk {
+    width: 33.333333%;
+    /* List now takes up 1/3 of the space */
+}
+
+/* Grid View: Cards are in a multi-column grid */
+#notes-container.notes-grid-view .note-card-wrapper {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding: 0 !important;
+    /* Remove all padding */
+}
+
+#notes-container.notes-grid-view .card {
+    height: 120px;
+}
+
+/* List View: Cards are in a single vertical list */
+#notes-container.notes-list-view .note-card-wrapper {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 !important;
+    /* Remove all padding */
+}
+
+#notes-container.notes-list-view .card {
+    height: 70px;
+    /* Giảm từ 100px xuống 70px */
+}
+
+/* Font size adjustments for list view */
+#notes-container.notes-list-view .card .card-title {
+    font-size: 1.14rem;
+    /* Tăng thêm 20% từ 0.95rem lên 1.14rem */
+    margin-bottom: 0.2rem;
+    /* Giảm khoảng cách giữa title và body */
+}
+
+#notes-container.notes-list-view .card .card-note-body {
+    font-size: 0.75rem;
+    /* Giảm kích thước font body */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    /* Chỉ hiển thị 1 dòng */
+    line-clamp: 1;
+    overflow: hidden;
+}
+
+#notes-container.notes-list-view .card .card-body {
+    padding: 0.5rem;
+    /* Giảm padding của card body */
+}
+
+/* Grid view - also truncate content */
+#notes-container.notes-grid-view .card .card-note-body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.8rem;
+}
+
+/* Compact notes container */
+#notes-container {
+    max-width: 100%;
+    margin: 0;
+}
+
+#notes-list-container {
+    transition: all 0.3s ease;
+}
+
+/* Responsive adjustments for notes */
+@media (max-width: 991.98px) {
+    #notes-list-container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        border: none;
+        min-height: auto;
+    }
+
+    .row.g-0 {
+        gap: 0.5rem !important;
+    }
+}
+
+/* Note Card Styles */
+#notes-container .card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    background-color: #141414; /* Nền màu thẻ ghi chú */
+    color: var(--text-color);
+}
+
+#notes-container .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#notes-container .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Make body fill the card height */
+    padding: 0.75rem;
+    overflow: hidden;
+}
+
+/* Container rule: Use line-clamp for proper multi-line truncation */
+#notes-container .card-note-body {
+    flex-grow: 1;
+    margin-right: 8px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    /* Ensure long words wrap */
+}
+
+#notes-container .card-body .mt-auto {
+    margin-top: auto !important;
+    /* Push status to the bottom */
+}
+
+/* --- Profile Highlight Animation --- */
+@keyframes profile-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(-10px);
+    }
+    50% {
+        transform: translateY(0);
+    }
+    75% {
+        transform: translateY(-5px);
+    }
+}
+
+.profile-highlight {
+    display: inline-block;
+    /* Ensure transform works correctly */
+    animation: profile-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* --- Grid View Specific Styles (Xem Mặc Định) --- */
+.notes-grid-view .col-lg-4,
+.notes-grid-view .col-md-6 {
+    /* Remove padding to make cards flush */
+    padding: 0 !important;
+}
+
+.notes-grid-view .card {
+    --note-card-height: 120px;
+    /* Default height for grid view */
+    height: var(--note-card-height);
+    transition: height 0.3s ease-in-out;
+    /* Add transition */
+}
+
+/* --- List View Specific Styles (Xem Danh Sách) --- */
+.notes-list-view .col-lg-4,
+.notes-list-view .col-md-6 {
+    /* In list view, each item is a full-width row */
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 !important;
+    /* Only bottom padding for spacing */
+}
+
+.notes-list-view .card {
+    --note-card-height: 100px;
+    /* Default height for list view */
+    height: var(--note-card-height);
+    transition: height 0.3s ease-in-out;
+    /* Add transition */
+}
+
+/* --- Card Height Modifiers --- */
+#notes-container.h-minus-2 .card {
+    --note-card-height: 80px;
+    /* Shorter cards */
+}
+
+#notes-container.h-minus-4 .card {
+    --note-card-height: 65px;
+    /* Shortest cards */
+}
+
+#notes-container.h-minus-4 .card .card-note-body {
+    display: none;
+    /* Hide body completely on smallest size */
+}
+
+#notes-container.h-minus-4 .card .card-title {
+    font-size: 0.9rem;
+    /* Keep font size reasonable */
+    white-space: normal;
+    /* Allow title to wrap */
+    overflow: hidden;
+    /* Still hide overflow if it's too long */
+    text-overflow: ellipsis;
+    /* Add ellipsis for very long titles */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* Allow up to 2 lines for title */
+    -webkit-box-orient: vertical;
+}
+
+/* Content scaling for smaller cards */
+#notes-container.h-minus-2 .card .card-title {
+    font-size: 0.9rem;
+}
+
+#notes-container.h-minus-2 .card .card-note-body {
+    -webkit-line-clamp: 1;
+    /* Show only 1 line of preview */
+    line-clamp: 1;
+    font-size: 0.8rem;
+}
+
+/* Notes Search Bar Styles */
+.notes-search-container {
+    background-color: transparent;
+    border: none;
+}
+
+#notes-search-input {
+    background-color: #1a1a1a !important; /* Nền màu ô tìm kiếm ghi chú */
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+#notes-search-input:focus {
+    background-color: #1a1a1a !important; /* Nền màu ô tìm kiếm khi focus */
+    border-color: var(--primary-color) !important;
+    color: var(--text-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+}
+
+#notes-search-input::placeholder {
+    color: #9ca3af !important;
+}
+
+.input-group-text {
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+}
+
+#notes-clear-search {
+    border-left: none !important;
+    background-color: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+    transition: all 0.2s ease;
+}
+
+#notes-clear-search:hover {
+    background-color: var(--hover-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #dc3545 !important;
+}
+
+/* Adjust search input width when panel is shrunk */
+.notes-search-container {
+    transition: transform 0.3s ease;
+    /* Only animate transform for smooth movement */
+}
+
+/* Grid view: Search bar centered */
+.notes-layout-container .notes-search-container {
+    margin: 0 auto;
+    /* Center the search bar */
+    transform: translateX(0);
+    /* Default position */
+}
+
+/* List view: Search bar moves to left when panel is shrunk */
+#notes-list-wrapper.shrunk .notes-search-container {
+    width: 100% !important;
+    /* Search takes full width of the shrunk panel */
+    margin: 0;
+    /* Remove center alignment */
+    transform: translateX(-1%);
+    /* Move left by a smaller amount to stay visible */
+}
+
+/* Notes Detail Panel Styles */
+#notes-detail-column {
+    /* This enables the smooth animation */
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, visibility 0.3s;
+}
+
+.notes-detail-hidden {
+    /* The state when the panel is hidden */
+    opacity: 0;
+    transform: translateX(30px);
+    /* Increased distance for a clearer slide effect */
+    visibility: hidden;
+    /* Hide it completely */
+    pointer-events: none;
+    /* Prevent mouse interaction when hidden */
+}
+
+.notes-detail-visible {
+    /* The state when the panel is shown */
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#notes-detail-panel {
+    background-color: #1b1b1bd3; /* Nền màu panel nội dung chi tiết ghi chú */
+    border: 1px solid var(--border-color);
+    height: 100%;
+    min-height: 600px;
+    /* Always visible in DOM */
+}
+
+#notes-detail-panel .card-header {
+    background-color: #0c0c0cc2; /* Nền màu header panel chi tiết ghi chú */
+    border-bottom: 1px solid var(--border-color);
+}
+
+.note-card-active {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3) !important;
+    border: 2px solid var(--primary-color) !important;
+    transition: all 0.3s ease;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+/* Perfect button alignment for note action buttons */
+.flex-shrink-0.btn-group-vertical {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+}
+
+.flex-shrink-0 .btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    padding: 0 !important;
+    border-radius: 4px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.flex-shrink-0 .btn i {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    font-size: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+/* Specific styling for edit and delete buttons */
+.btn-outline-secondary {
+    border: 1px solid #6c757d !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    transform: scale(1.05) !important;
+}
+
+.btn-outline-danger {
+    border: 1px solid #dc3545 !important;
+    background-color: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    transform: scale(1.05) !important;
+}
+
+/* Inline Editor Styles */
+#detail-editable-content {
+    outline: none;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    min-height: 150px;
+    /* Ensure a minimum height */
+}
+
+#detail-editable-content:hover,
+#detail-editable-content:focus {
+    background-color: var(--hover-color);
+}
+
+#detail-editable-content:empty:before {
+    content: attr(data-placeholder);
+    color: #6c757d;
+}
+
+#detail-editable-full {
+    outline: none;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    min-height: 150px;
+    background-color: #1b1b1bd3; /* Nền màu vùng chỉnh sửa ghi chú */
+    /* Ensure a minimum height */
+}
+
+#detail-editable-full:hover,
+#detail-editable-full:focus {
+    background-color: #1b1b1bd3; /* Nền màu vùng chỉnh sửa ghi chú - không sáng */
+}
+
+#detail-editable-full:empty:before {
+    content: attr(data-placeholder);
+    color: #6c757d;
+}
+
+/* --- START: Reset styles for any pasted content in notes editor --- */
+#detail-editable-full * {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+/* --- END: Reset styles for pasted content --- */
+
+/* --- START: Fix for URL rendering bug in notes editor --- */
+#detail-editable-full a {
+    overflow-wrap: break-word;
+    /* Force long URLs to wrap to the next line */
+    word-wrap: break-word;
+    /* Legacy fallback for older browsers */
+    background-color: transparent !important;
+    /* Remove any unwanted background color */
+    color: #69b3ff;
+    /* Use a standard, readable link color */
+    text-decoration: underline;
+    /* Ensure links are clearly identifiable */
+    cursor: pointer;
+    /* Show pointer cursor on hover */
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+    /* Smooth transition */
+}
+
+#detail-editable-full a:hover {
+    color: #00e0ff;
+    /* Brighter cyan on hover */
+    text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+    /* Subtle glow effect */
+}
+
+.auto-seeding-time-input::-webkit-outer-spin-button,
+.auto-seeding-time-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.auto-seeding-time-input {
+    -moz-appearance: textfield;
+}
+
+/* --- END: Fix for URL rendering bug --- */
+
+/* ===== CONTEXT MENU STYLES ===== */
+.custom-context-menu {
+    position: fixed;
+    z-index: 9999;
+    min-width: 200px;
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.custom-context-menu.show {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    background: #23272f;
+    color: #e6e6e6;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    padding: 8px 0;
+    display: none;
+    font-size: 1rem;
+    border: 1px solid #333a4a;
+    animation: fadeInMenu 0.15s;
+}
+
+@keyframes fadeInMenu {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.custom-context-menu .menu-item {
+    padding: 10px 22px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    color: inherit;
+    border-radius: 8px;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.custom-context-menu .menu-item:hover {
+    background: #313846;
+    color: #00e0ff;
+}
+
+/* Add these new styles */
+.custom-context-menu .menu-item.has-submenu {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.custom-context-menu .submenu {
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    /* Align with parent item */
+    display: none;
+    min-width: 150px;
+    background: #2c3340;
+    /* Slightly different color for distinction */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 8px;
+    border: 1px solid #444a59;
+    animation: fadeInMenu 0.1s;
+}
+
+.custom-context-menu .menu-item.has-submenu:hover>.submenu {
+    display: block;
+}
+
+.custom-context-menu .submenu .menu-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.custom-context-menu .submenu .menu-item i.bi-check-circle-fill {
+    color: #00e0ff;
+}
+
+/* Profile span context menu specific styles */
+.context-menu-header {
+    padding: 8px 22px;
+    font-weight: 600;
+    color: #00e0ff;
+    border-bottom: 1px solid #333a4a;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 8px 22px;
+    margin-bottom: 8px;
+}
+
+.color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    border-color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+
+#profile-span-context-menu .submenu {
+    padding: 8px;
+    width: 170px;
+    /* Set a fixed width for the color palette */
+}
+
+#profile-span-context-menu .color-grid {
+    padding: 0;
+    margin: 0;
+}
+
+.has-profile {
+    color: #00e0ff !important;
+    /* CORRECTED: Cyan/Blue */
+    /* font-weight: bold; REMOVED */
+    border-bottom: 1px dashed #00e0ff;
+    /* CORRECTED: Cyan/Blue */
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.has-profile:hover {
+    background-color: rgba(0, 224, 255, 0.15);
+    /* CORRECTED: Cyan/Blue glow */
+    text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+    /* CORRECTED: Cyan/Blue glow */
+}
+
+#notes-context-menu {
+    display: none;
+}
+
+#notes-context-menu .menu-item {
+    position: relative;
+}
+
+#notes-context-menu .color-palette {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -8px;
+    background: #2c3340;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 150px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+#notes-context-menu .menu-item:hover>.color-palette {
+    display: grid;
+}
+
+#notes-context-menu .color-palette span {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 1px solid #555;
+    transition: transform 0.2s;
+}
+
+#notes-context-menu .color-palette span:hover {
+    transform: scale(1.15);
+}
+
+
+/* --- Animation cho thẻ Ghi chú mới --- */
+@keyframes noteCardEnterAnimation {
+    0% {
+        opacity: 0;
+        transform: translateY(25px) scale(0.95);
+        box-shadow: 0 0 15px rgba(0, 224, 255, 0.4);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(0) scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 224, 255, 0.25);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: none;
+    }
+}
+
+.note-card-enter .card {
+    animation: noteCardEnterAnimation 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+#notes-container .card {
+    /* Transition mượt mà cho các thuộc tính sẽ thay đổi khi hover */
+    transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                box-shadow 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                border-color 0.2s ease-in-out;
+}
+
+#notes-container .card:hover {
+    /* Hiệu ứng dở card */
+    transform: translateY(-10px);
+    /* Hiệu ứng viền và bóng sáng giống hệt trang chủ */
+    border-color: #00e0ff;
+    /* <-- Thêm viền sáng */
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.2), 
+                0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.note-card-enter-active {
+    transform: translateY(-10px);
+    border-color: #00e0ff;
+    box-shadow: 0 8px 32px 0 rgba(0, 255, 255, 0.2), 0 12px 30px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* <-- ADD THIS LINE */
+}
+
+/* === Notes internal scroll === */
+.notes-layout-container {
+    height: calc(100vh - 120px);
+}
+
+#notes-list-wrapper,
+#notes-detail-wrapper {
+    min-height: 0;
+    overflow: hidden;
+}
+
+#notes-detail-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#notes-detail-content-wrapper {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === Smart Token CSS === */
+.smart-token {
+    color: #0d6efd; /* Màu xanh dương */
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.smart-token:hover {
+    text-decoration: underline;
+}
+/* ======================= */
+

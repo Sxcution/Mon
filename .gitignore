@@ -40,3 +40,7 @@ ENV/
 
 # Ignore repository-local data directory
 data/
+
+# Android Tool data
+Android_Tool/modules/ModAndroid/data/
+Android_Tool/logs/

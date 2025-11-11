@@ -1,0 +1,615 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-gear-wide-connected me-2"></i>Cài Đặt Dashboard</h2>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success" id="realtime-indicator">
+                        <i class="bi bi-circle-fill pulse-dot"></i> Real-time
+                    </span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadSettings(true)">
+                        <i class="bi bi-arrow-clockwise"></i> Tải lại
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Cards -->
+            <div class="row g-4">
+                <!-- System Settings -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary">
+                            <h5 class="mb-0"><i class="bi bi-windows me-2"></i>Hệ Thống</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Auto Start -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-power me-2"></i>Tự động khởi động cùng Windows
+                                    </h6>
+                                    <small class="text-muted">Dashboard sẽ tự động mở khi Windows khởi động</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoStartSwitch" 
+                                           onchange="toggleAutoStart()" style="cursor: pointer; width: 3em; height: 1.5em;">
+                                </div>
+                            </div>
+
+                            <!-- Auto Open Dashboard -->
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-browser-chrome me-2"></i>Mở dashboard khi chạy code
+                                    </h6>
+                                    <small class="text-muted">Tự động mở trình duyệt khi chạy run.py</small>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="autoOpenDashboardSwitch" 
+                                           onchange="toggleAutoOpenDashboard()" style="cursor: pointer; width: 3em; height: 1.5em;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer Settings -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-alarm me-2"></i>Hẹn Giờ</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Shutdown Timer -->
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-power me-2 text-danger"></i>Hẹn giờ tắt máy
+                                    </h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="shutdownToggle" 
+                                               onchange="toggleShutdownTimer()" style="cursor: pointer; width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 align-items-center" id="shutdownInputs">
+                                    <input type="number" class="form-control" id="shutdownHours" 
+                                           placeholder="Giờ" min="0" max="24" disabled style="max-width: 100px;">
+                                    <span>:</span>
+                                    <input type="number" class="form-control" id="shutdownMinutes" 
+                                           placeholder="Phút" min="0" max="59" disabled style="max-width: 100px;">
+                                    <button class="btn btn-sm btn-primary" id="applyShutdownBtn" 
+                                            onclick="applyShutdownTimer()" disabled>
+                                        <i class="bi bi-check-lg"></i> Áp dụng
+                                    </button>
+                                </div>
+                                <div id="shutdownCountdown" class="mt-2 text-muted small"></div>
+                            </div>
+
+                            <!-- Notification Timer -->
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-bell me-2 text-info"></i>Hẹn giờ thông báo
+                                    </h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notificationToggle" 
+                                               onchange="toggleNotificationTimer()" style="cursor: pointer; width: 3em; height: 1.5em;">
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 align-items-center mb-2" id="notificationInputs">
+                                    <input type="number" class="form-control" id="notificationHours" 
+                                           placeholder="Giờ" min="0" max="24" disabled style="max-width: 100px;">
+                                    <span>:</span>
+                                    <input type="number" class="form-control" id="notificationMinutes" 
+                                           placeholder="Phút" min="0" max="59" disabled style="max-width: 100px;">
+                                    <button class="btn btn-sm btn-primary" id="applyNotificationBtn" 
+                                            onclick="applyNotificationTimer()" disabled>
+                                        <i class="bi bi-check-lg"></i> Áp dụng
+                                    </button>
+                                </div>
+                                <textarea class="form-control form-control-sm mb-2" id="notificationMessage" 
+                                          placeholder="Nội dung thông báo..." rows="2" disabled></textarea>
+                                <div id="notificationCountdown" class="text-muted small"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time Settings -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success">
+                            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Cài Đặt Real-Time MXH</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <label for="mxh-refresh-interval-ms" class="form-label">Tần suất làm mới (ms)</label>
+                                    <input type="number" class="form-control" id="mxh-refresh-interval-ms"
+                                        placeholder="Nhập mili giây (>= 3000ms)" min="3000" step="1000">
+                                    <div class="form-text">Mỗi 1000ms = 1 giây. Giá trị đề xuất: 15000 (15 giây).</div>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                    <button type="button" class="btn btn-sm btn-primary mt-3 mt-md-0" id="apply-mxh-refresh-btn">Áp Dụng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About & Info -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-info">
+                            <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông Tin</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Dashboard Version:</strong> 2.0.0</p>
+                                    <p class="mb-1"><strong>Real-time System:</strong> ✅ Active</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Auto-refresh:</strong> 3 giây</p>
+                                    <p class="mb-1"><strong>Last Updated:</strong> <span id="lastUpdated">--</span></p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1"><strong>Developer:</strong> Mon</p>
+                                    <p class="mb-1"><strong>Framework:</strong> Flask + Bootstrap 5</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Real-time indicator animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.pulse-dot {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* Switch animations */
+.form-check-input {
+    transition: all 0.3s ease;
+}
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+</style>
+
+<script>
+// ===== SETTINGS REAL-TIME SYSTEM =====
+const SETTINGS_CONFIG = {
+    AUTO_REFRESH_INTERVAL: 3000,
+    DEBOUNCE_DELAY: 500
+};
+
+// Global state
+let settingsData = null;
+let autoRefreshInterval = null;
+let isUpdating = false;
+
+// Timers
+let shutdownCountdownInterval = null;
+let notificationCountdownInterval = null;
+
+// ===== AUTO-REFRESH SYSTEM =====
+function startAutoRefresh() {
+    if (autoRefreshInterval) return;
+    autoRefreshInterval = setInterval(() => {
+        if (!isUpdating) {
+            loadSettings(false);
+        }
+    }, SETTINGS_CONFIG.AUTO_REFRESH_INTERVAL);
+    console.log('✅ Settings auto-refresh started');
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        console.log('⏸️ Settings auto-refresh stopped');
+    }
+}
+
+// Pause auto-refresh when user is interacting
+function pauseAutoRefresh() {
+    stopAutoRefresh();
+    setTimeout(startAutoRefresh, 2000); // Resume after 2s
+}
+
+// ===== LOAD SETTINGS =====
+async function loadSettings(forceRender = false) {
+    try {
+        const response = await fetch('/settings/api/settings');
+        const newData = await response.json();
+        
+        // Smart comparison - only render if data changed
+        const dataChanged = JSON.stringify(settingsData) !== JSON.stringify(newData);
+        
+        if (dataChanged || forceRender) {
+            settingsData = newData;
+            renderSettings();
+            console.log('🔄 Settings updated');
+        }
+        
+        // Update last updated time
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('vi-VN');
+    } catch (error) {
+        console.error('Error loading settings:', error);
+        showToast('Lỗi khi tải cài đặt!', 'error');
+    }
+}
+
+// ===== RENDER SETTINGS =====
+function renderSettings() {
+    if (!settingsData) return;
+    
+    // System settings
+    document.getElementById('autoStartSwitch').checked = settingsData.auto_start || false;
+    document.getElementById('autoOpenDashboardSwitch').checked = settingsData.auto_open_dashboard || false;
+    
+    // Timer settings
+    if (settingsData.shutdown_timer) {
+        const st = settingsData.shutdown_timer;
+        document.getElementById('shutdownToggle').checked = st.enabled || false;
+        document.getElementById('shutdownHours').value = st.hours || 0;
+        document.getElementById('shutdownMinutes').value = st.minutes || 0;
+        toggleShutdownInputs(st.enabled);
+    }
+    
+    if (settingsData.notification_timer) {
+        const nt = settingsData.notification_timer;
+        document.getElementById('notificationToggle').checked = nt.enabled || false;
+        document.getElementById('notificationHours').value = nt.hours || 0;
+        document.getElementById('notificationMinutes').value = nt.minutes || 0;
+        document.getElementById('notificationMessage').value = nt.message || '';
+        toggleNotificationInputs(nt.enabled);
+    }
+    
+    // Start countdown timers if enabled
+    checkTimers();
+}
+
+// ===== TOGGLE AUTO START =====
+async function toggleAutoStart() {
+    const checkbox = document.getElementById('autoStartSwitch');
+    const enabled = checkbox.checked;
+    
+    // Instant local update
+    if (settingsData) {
+        settingsData.auto_start = enabled;
+    }
+    
+    pauseAutoRefresh();
+    
+    // Background API call
+    try {
+        await fetch('/settings/api/settings/auto-start', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled })
+        });
+        showToast(`Tự động khởi động: ${enabled ? 'BẬT' : 'TẮT'}`, 'success');
+    } catch (error) {
+        console.error('Error toggling auto-start:', error);
+        checkbox.checked = !enabled;
+        if (settingsData) settingsData.auto_start = !enabled;
+        showToast('Lỗi khi cập nhật!', 'error');
+    }
+}
+
+// ===== TOGGLE AUTO OPEN DASHBOARD =====
+async function toggleAutoOpenDashboard() {
+    const checkbox = document.getElementById('autoOpenDashboardSwitch');
+    const enabled = checkbox.checked;
+    
+    // Instant local update
+    if (settingsData) {
+        settingsData.auto_open_dashboard = enabled;
+    }
+    
+    pauseAutoRefresh();
+    
+    // Background API call
+    try {
+        await fetch('/settings/api/settings/auto-open-dashboard', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled })
+        });
+        showToast(`Tự động mở dashboard: ${enabled ? 'BẬT' : 'TẮT'}`, 'success');
+    } catch (error) {
+        console.error('Error toggling auto-open:', error);
+        checkbox.checked = !enabled;
+        if (settingsData) settingsData.auto_open_dashboard = !enabled;
+        showToast('Lỗi khi cập nhật!', 'error');
+    }
+}
+
+// ===== SHUTDOWN TIMER =====
+function toggleShutdownTimer() {
+    const enabled = document.getElementById('shutdownToggle').checked;
+    toggleShutdownInputs(enabled);
+    
+    if (!enabled) {
+        localStorage.removeItem('shutdownDeadline');
+        clearInterval(shutdownCountdownInterval);
+        document.getElementById('shutdownCountdown').textContent = '';
+    }
+}
+
+function toggleShutdownInputs(enabled) {
+    document.getElementById('shutdownHours').disabled = !enabled;
+    document.getElementById('shutdownMinutes').disabled = !enabled;
+    document.getElementById('applyShutdownBtn').disabled = !enabled;
+    document.getElementById('shutdownInputs').style.opacity = enabled ? '1' : '0.5';
+}
+
+async function applyShutdownTimer() {
+    const hours = parseInt(document.getElementById('shutdownHours').value) || 0;
+    const minutes = parseInt(document.getElementById('shutdownMinutes').value) || 0;
+    const totalMs = (hours * 60 + minutes) * 60 * 1000;
+    
+    if (totalMs === 0) {
+        showToast('Vui lòng nhập thời gian!', 'error');
+        return;
+    }
+    
+    pauseAutoRefresh();
+    
+    try {
+        await fetch('/settings/api/settings/shutdown-timer', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: true, hours, minutes })
+        });
+        
+        localStorage.setItem('shutdownDeadline', Date.now() + totalMs);
+        startShutdownCountdown();
+        showToast(`Đã hẹn tắt máy sau ${hours}h ${minutes}p`, 'success');
+    } catch (error) {
+        console.error('Error setting shutdown timer:', error);
+        showToast('Lỗi khi cài đặt!', 'error');
+    }
+}
+
+function startShutdownCountdown() {
+    clearInterval(shutdownCountdownInterval);
+    
+    shutdownCountdownInterval = setInterval(() => {
+        const deadline = localStorage.getItem('shutdownDeadline');
+        if (!deadline) {
+            clearInterval(shutdownCountdownInterval);
+            return;
+        }
+        
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+            clearInterval(shutdownCountdownInterval);
+            localStorage.removeItem('shutdownDeadline');
+            document.getElementById('shutdownCountdown').textContent = 'Đang tắt máy...';
+            showToast('Đang tắt máy...', 'info');
+            fetch('/settings/api/system/shutdown', { method: 'POST' });
+        } else {
+            const hours = Math.floor(remaining / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('shutdownCountdown').textContent = 
+                `⏰ Còn lại: ${hours}h ${minutes}p ${seconds}s`;
+        }
+    }, 1000);
+}
+
+// ===== NOTIFICATION TIMER =====
+function toggleNotificationTimer() {
+    const enabled = document.getElementById('notificationToggle').checked;
+    toggleNotificationInputs(enabled);
+    
+    if (!enabled) {
+        localStorage.removeItem('notificationDeadline');
+        clearInterval(notificationCountdownInterval);
+        document.getElementById('notificationCountdown').textContent = '';
+    }
+}
+
+function toggleNotificationInputs(enabled) {
+    document.getElementById('notificationHours').disabled = !enabled;
+    document.getElementById('notificationMinutes').disabled = !enabled;
+    document.getElementById('notificationMessage').disabled = !enabled;
+    document.getElementById('applyNotificationBtn').disabled = !enabled;
+    document.getElementById('notificationInputs').style.opacity = enabled ? '1' : '0.5';
+}
+
+async function applyNotificationTimer() {
+    const hours = parseInt(document.getElementById('notificationHours').value) || 0;
+    const minutes = parseInt(document.getElementById('notificationMinutes').value) || 0;
+    const message = document.getElementById('notificationMessage').value.trim();
+    const totalMs = (hours * 60 + minutes) * 60 * 1000;
+    
+    if (totalMs === 0) {
+        showToast('Vui lòng nhập thời gian!', 'error');
+        return;
+    }
+    
+    if (!message) {
+        showToast('Vui lòng nhập nội dung thông báo!', 'error');
+        return;
+    }
+    
+    pauseAutoRefresh();
+    
+    try {
+        await fetch('/settings/api/settings/notification-timer', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: true, hours, minutes, message })
+        });
+        
+        localStorage.setItem('notificationDeadline', Date.now() + totalMs);
+        localStorage.setItem('notificationMessage', message);
+        startNotificationCountdown();
+        showToast(`Đã hẹn thông báo sau ${hours}h ${minutes}p`, 'success');
+    } catch (error) {
+        console.error('Error setting notification timer:', error);
+        showToast('Lỗi khi cài đặt!', 'error');
+    }
+}
+
+function startNotificationCountdown() {
+    clearInterval(notificationCountdownInterval);
+    
+    notificationCountdownInterval = setInterval(() => {
+        const deadline = localStorage.getItem('notificationDeadline');
+        if (!deadline) {
+            clearInterval(notificationCountdownInterval);
+            return;
+        }
+        
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+            clearInterval(notificationCountdownInterval);
+            const message = localStorage.getItem('notificationMessage') || 'Hết giờ!';
+            localStorage.removeItem('notificationDeadline');
+            document.getElementById('notificationCountdown').textContent = 'Đã thông báo!';
+            
+            // Show browser notification
+            if (Notification.permission === "granted") {
+                new Notification('⏰ Thông báo!', { body: message, requireInteraction: true });
+            }
+            showToast(message, 'info', 'Thông báo');
+        } else {
+            const hours = Math.floor(remaining / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('notificationCountdown').textContent = 
+                `⏰ Còn lại: ${hours}h ${minutes}p ${seconds}s`;
+        }
+    }, 1000);
+}
+
+// ===== CHECK TIMERS ON LOAD =====
+function checkTimers() {
+    // Check shutdown timer
+    const shutdownDeadline = localStorage.getItem('shutdownDeadline');
+    if (shutdownDeadline && Date.now() < shutdownDeadline) {
+        startShutdownCountdown();
+    }
+    
+    // Check notification timer
+    const notificationDeadline = localStorage.getItem('notificationDeadline');
+    if (notificationDeadline && Date.now() < notificationDeadline) {
+        startNotificationCountdown();
+    }
+}
+
+// ===== MXH REAL-TIME SETTINGS LOGIC =====
+
+// Function to load the MXH refresh interval
+async function loadMxhRefreshInterval() {
+    try {
+        const response = await fetch('/settings/api/settings');
+        if (response.ok) {
+            const settings = await response.json();
+            const interval = settings.mxh_refresh_interval || 15000;
+            document.getElementById('mxh-refresh-interval-ms').value = interval;
+        }
+    } catch (error) {
+        console.error('Error loading MXH settings:', error);
+    }
+}
+
+// Function to apply the MXH refresh interval
+async function applyMxhRefreshInterval() {
+    const intervalInput = document.getElementById('mxh-refresh-interval-ms');
+    const interval = parseInt(intervalInput.value, 10);
+
+    if (isNaN(interval) || interval < 3000) {
+        showToast('Tần suất phải là số nguyên >= 3000ms!', 'error');
+        intervalInput.focus();
+        return;
+    }
+
+    try {
+        const response = await fetch('/settings/api/settings/mxh-refresh-interval', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interval_ms: interval })
+        });
+
+        if (response.ok) {
+            showToast(`✅ Đã lưu tần suất làm mới: ${interval / 1000} giây.`, 'success');
+            // NOTE: The main MXH page must re-read this setting on load/resume
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'Lỗi khi lưu tần suất!', 'error');
+        }
+    } catch (error) {
+        showToast('Lỗi kết nối API!', 'error');
+    }
+}
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Settings page loaded');
+    
+    // Request notification permission
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // Load initial settings
+    await loadSettings(true);
+    
+    // NEW: Load MXH refresh interval on DOM ready
+    loadMxhRefreshInterval();
+
+    // NEW: Event listener for apply button
+    const applyMxhRefreshBtn = document.getElementById('apply-mxh-refresh-btn');
+    if (applyMxhRefreshBtn) {
+        applyMxhRefreshBtn.addEventListener('click', applyMxhRefreshInterval);
+    }
+    
+    // Start auto-refresh
+    startAutoRefresh();
+    
+    // Tab visibility handling
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            loadSettings(true);
+            startAutoRefresh();
+        }
+    });
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    stopAutoRefresh();
+    clearInterval(shutdownCountdownInterval);
+    clearInterval(notificationCountdownInterval);
+});
+</script>
+{% endblock %}

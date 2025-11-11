@@ -1,0 +1,2577 @@
+{% extends "layouts/base.html" %}
+
+{% block styles %}
+<style>
+    /* Notes Layout Container */
+    .notes-layout-container {
+        display: flex;
+        gap: 1rem;
+    }
+
+    #notes-list-wrapper {
+        flex-grow: 1;
+        width: 100%;
+        transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    #notes-detail-wrapper {
+        flex-shrink: 0;
+        width: 0;
+        transform: translateX(30px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    #notes-detail-wrapper.visible {
+        width: 66.666667%;
+        transform: translateX(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    #notes-list-wrapper.shrunk {
+        width: 33.333333%;
+    }
+
+    /* Grid View */
+    #notes-container.notes-grid-view .note-card-wrapper {
+        flex: 0 0 33.333333%;
+        max-width: 33.333333%;
+        padding: 0 !important;
+    }
+
+    #notes-container.notes-grid-view .card {
+        height: 120px;
+    }
+
+    /* List View */
+    #notes-container.notes-list-view .note-card-wrapper {
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 0 !important;
+    }
+
+    #notes-container.notes-list-view .card {
+        height: 70px;
+    }
+
+    #notes-container.notes-list-view .card .card-title {
+        font-size: 1.14rem;
+        margin-bottom: 0.2rem;
+    }
+
+    #notes-container.notes-list-view .card .card-note-body {
+        font-size: 0.75rem;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+
+    #notes-container.notes-list-view .card .card-body {
+        padding: 0.5rem;
+    }
+
+    /* Card Animations */
+    #notes-container .card {
+        border-left: 4px solid var(--bs-card-border-color);
+        border-radius: 0;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+            box-shadow 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),
+            border-color 0.2s ease-in-out;
+    }
+
+    #notes-container .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 224, 255, 0.2),
+            0 12px 30px rgba(0, 0, 0, 0.4);
+        border-color: #00e0ff;
+    }
+
+    #notes-container .card-body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 0.75rem;
+        overflow: hidden;
+    }
+
+    #notes-container .card-note-body {
+        flex-grow: 1;
+        margin-right: 8px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-break: break-word;
+    }
+
+    .note-card-active {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3) !important;
+        border: 2px solid var(--primary-color) !important;
+    }
+
+    /* Card Size Modifiers */
+    #notes-container.h-minus-2 .card {
+        height: 80px;
+    }
+
+    #notes-container.h-minus-4 .card {
+        height: 65px;
+    }
+
+    #notes-container.h-minus-4 .card .card-note-body {
+        display: none;
+    }
+
+    #notes-container.h-minus-4 .card .card-title {
+        font-size: 0.9rem;
+        white-space: normal;
+    }
+
+    #notes-container.h-minus-2 .card .card-title {
+        font-size: 0.9rem;
+    }
+
+    #notes-container.h-minus-2 .card .card-note-body {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+
+    /* Profile highlighting */
+    .has-profile {
+        background-color: rgba(0, 224, 255, 0.2);
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .has-profile:hover {
+        background-color: rgba(0, 224, 255, 0.3);
+    }
+
+    /* Card Enter Animation */
+    .note-card-enter-active {
+        animation: noteCardEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes noteCardEnter {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Profile Highlight Animation */
+    .profile-highlight {
+        display: inline-block;
+        animation: profile-bounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes profile-bounce {
+        0% {
+            transform: translateY(0);
+        }
+
+        25% {
+            transform: translateY(-10px);
+        }
+
+        50% {
+            transform: translateY(0);
+        }
+
+        75% {
+            transform: translateY(-5px);
+        }
+    }
+
+    /* Context Menu Styles */
+    .custom-context-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        min-width: 180px;
+        max-width: 260px;
+
+        background: #1f1f1f;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+
+        font-size: 13px;
+        line-height: 1.4;
+        padding: 4px 0;
+        user-select: none;
+
+        /* Ẩn mặc định */
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .custom-context-menu.show {
+        display: block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .menu-item:hover {
+        background: rgba(255,255,255,0.08);
+    }
+    .custom-context-menu hr {
+        border: 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        margin: 4px 0;
+    }
+
+    .menu-divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 4px 0;
+    }
+
+    .color-palette {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+        padding: 8px;
+        margin-top: 4px;
+    }
+
+    .color-palette span {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s;
+    }
+
+    .color-palette span:hover {
+        border-color: #fff;
+    }
+
+    /* Submenu styles */
+    .menu-item.has-submenu {
+        position: relative;
+    }
+
+    .submenu {
+        position: absolute;
+        left: 100%;
+        top: 0;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        display: none;
+        min-width: 180px;
+    }
+
+    .menu-item.has-submenu:hover .submenu {
+        display: block;
+    }
+
+    .submenu-arrow {
+        margin-left: auto;
+    }
+
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 8px;
+    }
+
+    .color-option {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s;
+    }
+
+    .color-option:hover {
+        border-color: #fff;
+    }
+
+/* ===== HARD-LOCK preview 400x400 (copy từ notespreview) ===== */
+.profile-popover-content .preview-container{
+  width:400px !important; height:400px !important;
+  min-width:400px !important; max-width:400px !important;
+  min-height:400px !important; max-height:400px !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  overflow:hidden !important; box-sizing:border-box !important;
+  border:1px solid #444; border-radius:10px; background:#0f1115;
+}
+/* Vô hiệu hóa mọi img {width:100%} toàn cục */
+.profile-popover-content .preview-container > img{
+  display:block !important; width:100% !important; height:100% !important;
+  max-width:100% !important; max-height:100% !important; object-fit:contain !important;
+}
+
+/* Popover chứa preview: khóa bề ngang, chống rule .popover{max-width:...} đè */
+.popover.profile-popover-500{
+  width:448px !important; max-width:448px !important;
+}
+.popover.profile-popover-500 .popover-body{ overflow:hidden; }
+
+.profile-popover-content .preview-container{ outline:1px dashed #666; }
+
+/* Thumbnail kiểu Telegram bên trong editor của Gán Profile */
+#notes-profile-content-editor .tg-thumb{
+  width:160px;height:160px;display:inline-flex;align-items:center;justify-content:center;
+  overflow:hidden;border:1px solid #444;border-radius:10px;margin:4px;cursor:pointer;
+  background:#0f1115;
+}
+#notes-profile-content-editor .tg-thumb > img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+
+/* Nếu ai đó chèn img trần → tự co lại */
+#notes-profile-content-editor img:not(.tg-thumb > img){
+  max-width:200px;max-height:200px;object-fit:contain;
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+{# --- PHẦN HTML CHO CÁC CONTEXT MENU (ĐANG BỊ THIẾU) --- #}
+<div id="notes-tab-context-menu" class="custom-context-menu">
+    <div class="menu-item" onclick="window.addNewNoteFromContextMenu()">
+        <i class="bi bi-plus-lg me-2"></i> Thêm Ghi Chú Mới
+    </div>
+    <div class="menu-item has-submenu">
+        <i class="bi bi-aspect-ratio me-2"></i> Chế độ xem
+        <i class="bi bi-chevron-right submenu-arrow"></i>
+        <div class="submenu">
+            <div class="menu-item" data-size-modifier="default">
+                <i class="bi bi-check-circle-fill me-2"></i>Mặc định
+            </div>
+            <div class="menu-item" data-size-modifier="h-minus-2">
+                <i class="bi bi-check-circle-fill me-2 d-none"></i>Thấp
+            </div>
+            <div class="menu-item" data-size-modifier="h-minus-4">
+                <i class="bi bi-check-circle-fill me-2 d-none"></i>Thấp nhất
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="note-card-context-menu" class="custom-context-menu">
+    <div class="menu-item" data-action="mark">
+        <i class="bi bi-star-fill me-2"></i> Đánh Dấu / Bỏ Đánh Dấu
+    </div>
+    <hr>
+    <div class="menu-item" data-action="copy-id">
+        <i class="bi bi-clipboard me-2"></i> Copy ID ghi chú
+    </div>
+    <div class="menu-item" data-action="delete" style="color: #dc3545;">
+        <i class="bi bi-trash-fill me-2"></i> Xóa Ghi Chú
+    </div>
+</div>
+
+<div id="notes-context-menu" class="custom-context-menu">
+    <div class="menu-item" id="context-copy"><i class="bi bi-clipboard me-2"></i> Sao chép</div>
+    <div class="menu-item" id="context-bold"><i class="bi bi-type-bold me-2"></i> In đậm</div>
+    <div class="menu-item" id="context-color"><i class="bi bi-palette-fill me-2"></i> Đổi màu chữ
+        <div class="color-palette">
+            <span style="background-color: #FFFFFF;" data-color="#FFFFFF"></span>
+            <span style="background-color: #EF5350;" data-color="#EF5350"></span>
+            <span style="background-color: #EC407A;" data-color="#EC407A"></span>
+            <span style="background-color: #AB47BC;" data-color="#AB47BC"></span>
+            <span style="background-color: #7E57C2;" data-color="#7E57C2"></span>
+            <span style="background-color: #5C6BC0;" data-color="#5C6BC0"></span>
+            <span style="background-color: #42A5F5;" data-color="#42A5F5"></span>
+            <span style="background-color: #26C6DA;" data-color="#26C6DA"></span>
+            <span style="background-color: #26A69A;" data-color="#26A69A"></span>
+            <span style="background-color: #66BB6A;" data-color="#66BB6A"></span>
+            <span style="background-color: #FFCA28;" data-color="#FFCA28"></span>
+            <span style="background-color: #FF7043;" data-color="#FF7043"></span>
+        </div>
+    </div>
+    <hr>
+    <div class="menu-item" id="context-link"><i class="bi bi-link-45deg me-2"></i> Gán Link</div>
+    <div class="menu-item" id="context-profile"><i class="bi bi-person-badge me-2"></i> Gán Profile</div>
+</div>
+
+<div id="profile-span-context-menu" class="custom-context-menu">
+    <div class="menu-item has-submenu">
+        <i class="bi bi-palette-fill"></i> Đổi màu
+        <i class="bi bi-chevron-right submenu-arrow"></i>
+        <div class="submenu">
+            <div class="color-grid">
+                <div class="color-option" data-color="#00e0ff" style="background-color: #00e0ff;" title="Cyan"></div>
+                <div class="color-option" data-color="#ff4757" style="background-color: #ff4757;" title="Red"></div>
+                <div class="color-option" data-color="#2ed573" style="background-color: #2ed573;" title="Green"></div>
+                <div class="color-option" data-color="#ffa502" style="background-color: #ffa502;" title="Orange"></div>
+                <div class="color-option" data-color="#3742fa" style="background-color: #3742fa;" title="Blue"></div>
+                <div class="color-option" data-color="#f368e0" style="background-color: #f368e0;" title="Pink"></div>
+                <div class="color-option" data-color="#54a0ff" style="background-color: #54a0ff;" title="Sky Blue">
+                </div>
+                <div class="color-option" data-color="#ffffff" style="background-color: #ffffff;" title="White"></div>
+            </div>
+        </div>
+    </div>
+    <div class="menu-item" id="context-delete-profile">
+        <i class="bi bi-trash-fill me-2"></i> Xóa
+    </div>
+</div>
+
+{# --- PHẦN GIAO DIỆN CHÍNH (ĐÃ SỬA LẠI CHO ĐÚNG) --- #}
+<div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
+    <div class="notes-layout-container">
+
+        <div id="notes-list-wrapper">
+            <div class="d-flex justify-content-start align-items-center mb-2">
+                <div class="position-relative notes-search-container" style="width: 50%;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3"
+                        style="z-index: 10;"></i>
+                    <input type="text" class="form-control ps-5" id="notes-search-input" spellcheck="false"
+                        placeholder="Tìm kiếm ghi chú..." style="border-radius: 25px;">
+                </div>
+            </div>
+            <div id="notes-container" class="row" spellcheck="false">
+                {# Ghi chú sẽ được render ở đây bằng JavaScript #}
+            </div>
+        </div>
+
+        <div id="notes-detail-wrapper">
+            <div id="notes-detail-panel" class="card h-100">
+                <div class="card-header">
+                    {# Header sẽ được cập nhật bằng JavaScript #}
+                </div>
+                <div class="card-body" id="notes-detail-content-wrapper">
+                    <div class="text-center text-muted p-3 h-100 d-flex flex-column justify-content-center align-items-center"
+                        id="notes-detail-placeholder">
+                        <i class="bi bi-arrow-left-circle" style="font-size: 2rem;"></i>
+                        <h6 class="mt-2">Chọn một ghi chú để xem</h6>
+                    </div>
+                    <div id="notes-detail-content" class="d-none">
+                        {# Nội dung chi tiết sẽ được render ở đây #}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# --- CÁC MODAL LIÊN QUAN ĐẾN GHI CHÚ --- #}
+<div class="modal fade" id="notes-addEditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="notes-addEditForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notes-modalTitle">Thêm Ghi Chú Mới</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <input type="hidden" id="notes-editId">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="notes-title-input" class="form-label">Tiêu đề (tùy chọn)</label>
+                        <div id="notes-title-input" contenteditable="true" class="form-control" spellcheck="false"
+                            placeholder="Nhập tiêu đề ghi chú..." style="min-height: 40px;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <div id="notes-content-editor" contenteditable="true" class="form-control" spellcheck="false"
+                            style="height: 200px; overflow-y: auto;" placeholder="Nhập nội dung ghi chú..."></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="notes-addLinkModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Gán Link vào chữ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label for="notes-link-url" class="form-label">Nhập URL</label>
+                <input type="url" class="form-control" id="notes-link-url" placeholder="https://...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="notes-save-link-btn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="notes-addProfileModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header" style="padding: 0.5rem 1rem;">
+                <h5 class="modal-title" style="margin: 0.3rem;">Gán Profile</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 0rem 1rem;">
+                <div class="row mb-1">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col">
+                                <label for="notes-profile-id" class="form-label" style="margin-bottom: 0rem;">ID</label>
+                            </div>
+                            <div class="col">
+                                <label for="notes-profile-password" class="form-label" style="margin-bottom: 0rem;">Password</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-1" style="margin-top: -0.5rem;">
+                    <div class="col">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="notes-profile-id" placeholder="Nhập ID..."
+                                autocomplete="off" style="height: 28px; padding: 0.25rem 0.5rem;">
+                            <button class="btn btn-outline-secondary" type="button" id="notes-copy-profile-id-btn"
+                                title="Copy ID" style="height: 28px; padding: 0.25rem 0.5rem;">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="notes-profile-password"
+                                placeholder="Nhập Password..." autocomplete="new-password" style="height: 28px; padding: 0.25rem 0.5rem;">
+                            <button class="btn btn-outline-secondary" type="button" id="notes-copy-profile-password-btn"
+                                title="Copy Password" style="height: 28px; padding: 0.25rem 0.5rem;">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <div id="notes-profile-content-editor" class="form-control"
+                         contenteditable="true" spellcheck="false"
+                         style="min-height:160px; max-height:260px; overflow:auto; padding: 0.375rem;"
+                         placeholder="Nhập nội dung chi tiết wichtig..."></div>
+                </div>
+                <div class="mb-1" id="profile-images-container" style="display: none;">
+                    <div id="profile-images-thumbnails" class="d-flex flex-wrap gap-1 p-1 border rounded" 
+                         style="min-height: 50px;">
+                        <!-- Thumbnails will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 0.25rem 0.5rem !important; margin: 0 !important;">
+                <button type="button" class="btn btn-outline-danger me-auto" id="notes-delete-profile-btn" style="padding: 0.15rem 0.4rem !important; margin: 0 !important;">Xóa
+                    Profile</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 0.15rem 0.4rem !important; margin: 0 !important;">Hủy</button>
+                <button type="button" class="btn btn-primary" id="notes-save-profile-btn" style="padding: 0.15rem 0.4rem !important; margin: 0 !important;">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="notes-confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận xóa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="mb-0">Bạn có chắc chắn muốn xóa ghi chú này?</p>
+                <small class="text-muted">Hành động này không thể hoàn tác.</small>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
+                <button type="button" class="btn btn-danger" id="notes-confirm-delete-btn">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="np-imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-dark">
+            <div class="modal-body p-0 d-flex justify-content-center align-items-center" style="min-height:60vh;">
+                <img id="np-imagePreview" alt="preview" style="max-width:95vw;max-height:90vh;display:block"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Context Menu cho Modal Ảnh -->
+<div id="image-modal-context-menu" class="custom-context-menu">
+    <div class="menu-item" id="context-copy-image">
+        <i class="bi bi-clipboard me-2"></i> Copy Ảnh
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const notesPane = document.getElementById('notes-tool-pane');
+        if (!notesPane) return;
+
+        // --- DOM Elements ---
+        const container = document.getElementById('notes-container');
+        const searchInput = document.getElementById('notes-search-input');
+        const listWrapper = document.getElementById('notes-list-wrapper');
+        const detailWrapper = document.getElementById('notes-detail-wrapper');
+
+        // Modal Elements
+        const modalEl = document.getElementById('notes-addEditModal');
+        const notesModal = new bootstrap.Modal(modalEl);
+        const form = document.getElementById('notes-addEditForm');
+        const modalTitle = document.getElementById('notes-modalTitle');
+        const editIdInput = document.getElementById('notes-editId');
+        const titleInput = document.getElementById('notes-title-input');
+        const contentEditor = document.getElementById('notes-content-editor');
+
+        // Context Menu Elements
+        const noteCardMenu = document.getElementById('note-card-context-menu');
+        const editorContextMenu = document.getElementById('notes-context-menu');
+        const notesTabMenu = document.getElementById('notes-tab-context-menu');
+
+        // === SMART CONTEXT MENU (port từ MXH sang Notes) ===
+
+        // Tính toán vị trí menu sao cho không tràn màn hình.
+        // Tự flip trái/phải và trên/dưới nếu sát mép.
+        function positionContextMenuSmart(menu, x, y) {
+            if (!menu) return;
+
+            // Tạm bật kiểu "có mặt trên DOM" để đo kích thước thực
+            const prevVis = menu.style.visibility;
+            const prevDisp = menu.style.display;
+            menu.style.visibility = 'hidden';
+            menu.style.display = 'block';
+
+            const rect = menu.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const MARGIN = 8; // tránh dính sát chuột và mép màn hình
+
+            // Xem có đủ chỗ bên phải / bên dưới không
+            const placeRight = (x + rect.width + MARGIN <= vw);
+            const placeDown  = (y + rect.height + MARGIN <= vh);
+
+            // Nếu không đủ chỗ thì lật qua trái / lật lên trên
+            let left = placeRight ? (x + MARGIN) : (x - rect.width - MARGIN);
+            let top  = placeDown  ? (y + MARGIN) : (y - rect.height - MARGIN);
+
+            // Clamp để menu không chọc lọt ra ngoài khi quá sát mép
+            left = Math.min(Math.max(left, MARGIN), vw - rect.width - MARGIN);
+            top  = Math.min(Math.max(top , MARGIN), vh - rect.height - MARGIN);
+
+            // Ghi vị trí cuối
+            menu.style.left = left + 'px';
+            menu.style.top  = top  + 'px';
+
+            // Khôi phục trạng thái hiển thị trước đó
+            menu.style.visibility = prevVis || '';
+            menu.style.display = ''; // luôn clear inline display để .show hoạt động
+        }
+
+        // Căn submenu con (.has-submenu > .submenu) sao cho submenu không bay ra ngoài mép
+        function positionAllSubmenusForMenu(menu) {
+            if (!menu) return;
+
+            const submenuItems = menu.querySelectorAll('.has-submenu');
+            submenuItems.forEach(item => {
+                const submenu = item.querySelector('.submenu');
+                if (!submenu) return;
+
+                // reset mặc định: submenu mở về bên phải, từ trên xuống
+                submenu.style.left = '100%';
+                submenu.style.right = 'auto';
+                submenu.style.top = '0';
+                submenu.style.bottom = 'auto';
+
+                const itemRect = item.getBoundingClientRect();
+                const submenuRect = submenu.getBoundingClientRect();
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                // Nếu tràn phải -> bung sang trái
+                if (itemRect.right + submenuRect.width > vw) {
+                    submenu.style.left = 'auto';
+                    submenu.style.right = '100%';
+                }
+
+                // Nếu tràn dưới -> đính đáy lên trên (bung ngược lên)
+                if (itemRect.top + submenuRect.height > vh) {
+                    submenu.style.top = 'auto';
+                    submenu.style.bottom = '0';
+                }
+            });
+        }
+
+        // Hiển thị menu theo vị trí chuột, dùng smart flip.
+        // Tự xử lý menu kiểu .custom-context-menu
+        function showSmartMenu(menu, x, y) {
+            if (!menu) return;
+
+            // 1) Đảm bảo menu nằm trực tiếp trong <body> để né overflow/transform stacking
+            if (menu.parentNode !== document.body) {
+                document.body.appendChild(menu);
+            }
+
+            // 2) Gỡ mọi cờ ẩn có thể gây "mù" menu
+            menu.removeAttribute('hidden');
+            menu.classList.remove('hidden','d-none','is-hidden','invisible');
+
+            // 3) TẠM bật để đo kích thước: dùng !important để thắng mọi CSS cứng đầu
+            menu.style.setProperty('position', 'fixed', 'important');
+            menu.style.setProperty('z-index', '2147483647', 'important');
+            menu.style.setProperty('display', 'block', 'important');
+            menu.style.setProperty('visibility', 'hidden', 'important');
+            menu.style.removeProperty('left');
+            menu.style.removeProperty('top');
+
+            // 4) Đo và tính toạ độ thông minh
+            const M = 8;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const rect = menu.getBoundingClientRect();
+            let left = x + M;
+            let top  = y + M;
+            if (left + rect.width > vw - M) left = x - rect.width - M;
+            if (left < M) left = M;
+            if (top + rect.height > vh - M) top = y - rect.height - M;
+            if (top < M) top = M;
+
+            // 5) Áp toạ độ
+            menu.style.left = left + 'px';
+            menu.style.top  = top  + 'px';
+
+            // 6) Mở menu: vừa dùng class .show, vừa ép inline !important cho chắc
+            menu.classList.add('show');
+            menu.style.setProperty('visibility', 'visible', 'important');
+            menu.style.setProperty('display', 'block', 'important');
+
+            // 7) Căn submenu con (flip trái/phải & trên/dưới)
+            positionAllSubmenusForMenu(menu);
+        }
+
+        // Ẩn tất cả context menu (tab/card/editor/profile-span + menu thumbnail ảnh)
+        // Gọi mỗi lần click ra ngoài, scroll, resize.
+        function hideAllContextMenus(preserveSelection = false) {
+            document.querySelectorAll('.custom-context-menu').forEach(menu => {
+                menu.classList.remove('show');
+                // xoá mọi inline có thể giữ trạng thái "ẩn" sau lần trước
+                menu.style.removeProperty('display');
+                menu.style.removeProperty('visibility');
+                menu.style.removeProperty('left');
+                menu.style.removeProperty('top');
+            });
+            
+            // Chỉ xóa savedSelection nếu KHÔNG preserve
+            if (!preserveSelection) {
+                savedSelection = null;
+            }
+        }
+
+        // Đảm bảo toàn bộ menu tự ẩn khi click ngoài, scroll, resize
+        document.addEventListener('click', hideAllContextMenus);
+        window.addEventListener('scroll', hideAllContextMenus, { passive: true });
+        window.addEventListener('resize', hideAllContextMenus);
+
+
+        // ===== SMART CONTEXT MENU POSITIONING =====
+
+        const addLinkModal = new bootstrap.Modal(document.getElementById('notes-addLinkModal'));
+        const linkUrlInput = document.getElementById('notes-link-url');
+        const saveLinkBtn = document.getElementById('notes-save-link-btn');
+
+        // --- State Variables ---
+        let activeNoteId = null;
+        let autoSaveTimer = null;
+        let savedSelection = null;
+        let blockNextBlurSave = false;
+        window.notesData = [];
+        window.filteredNotes = [];
+
+        // --- Core Functions ---
+        function formatTimeAgo(isoString) {
+            if (!isoString) return '';
+            const seconds = Math.round((new Date() - new Date(isoString)) / 1000);
+            if (seconds < 60) return "vài giây trước";
+            const intervals = { 'năm': 31536000, 'tháng': 2592000, 'ngày': 86400, 'giờ': 3600, 'phút': 60 };
+            for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+                const value = Math.floor(seconds / secondsInUnit);
+                if (value >= 1) return `${value} ${unit} trước`;
+            }
+            return "vài giây trước";
+        }
+
+        // Auto-detection helper: Wrap patterns with clickable spans
+        function autoDetectPatterns(text) {
+            console.log('[autoDetectPatterns] 🔍 Input text:', text);
+            
+            if (!text || typeof text !== 'string') {
+                console.log('[autoDetectPatterns] ⚠️ Invalid input, returning as-is');
+                return text;
+            }
+            
+            // 1. Detect /command or //command: wrap in cyan span
+            // EXCLUDE HTML tags like /span, /div, /p, etc.
+            // //command -> copy "/command" (with /)
+            // /command -> copy "command" (without /)
+            // Pattern: /{1,2}[a-zA-Z0-9_]+ but NOT if it's an HTML closing tag
+            text = text.replace(/(\/{1,2})([a-zA-Z0-9_]+)/g, (match, slashes, command, offset, string) => {
+                // Check if this is inside an HTML tag (has < before /)
+                const beforeMatch = string.substring(Math.max(0, offset - 1), offset);
+                if (beforeMatch === '<') {
+                    console.log('[autoDetectPatterns] ⏭️ Skipping HTML closing tag:', match);
+                    return match; // Return as-is
+                }
+                
+                // Skip common HTML tags
+                const htmlTags = ['span', 'div', 'p', 'a', 'b', 'i', 'u', 'strong', 'em', 'br', 'hr', 'img', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot'];
+                if (htmlTags.includes(command.toLowerCase())) {
+                    console.log('[autoDetectPatterns] ⏭️ Skipping HTML tag name:', match);
+                    return match; // Return as-is
+                }
+                
+                console.log('[autoDetectPatterns] 📝 Found command:', match, '| slashes:', slashes, '| command:', command);
+                const copyText = slashes.length === 2 ? `/${command}` : command;
+                return `<span class="auto-command" style="color: #00e0ff; cursor: pointer;" data-command="${match}" data-copy="${copyText}">${match}</span>`;
+            });
+            
+            // 3. Detect 'text: wrap only text after ' (exclude the quote)
+            // Pattern: '([a-zA-Z0-9_]+) (' followed by alphanumeric/underscore, no closing quote)
+            text = text.replace(/'([a-zA-Z0-9_]+)/g, (match, word) => {
+                console.log('[autoDetectPatterns] 💬 Found quoted:', word);
+                return `'<span class="auto-quoted" style="color: #ffa500; cursor: pointer;" data-quoted="${word}">${word}</span>`;
+            });
+            
+            console.log('[autoDetectPatterns] ✅ Processed text:', text);
+            return text;
+        }
+
+        async function fetchAndRenderNotes(searchTerm = '') {
+            try {
+                const response = await fetch("{{ url_for('notes_feature.api_get_notes') }}");
+                if (!response.ok) throw new Error(`Lỗi Server: ${response.status}`);
+
+                const notes = await response.json();
+                window.notesData = notes.sort((a, b) => new Date(b.modified_at) - new Date(a.modified_at));
+
+                window.filteredNotes = searchTerm
+                    ? window.notesData.filter(note =>
+                    ((note.title_html || '').toLowerCase().includes(searchTerm) ||
+                        (note.content_html || '').toLowerCase().includes(searchTerm)))
+                    : [...window.notesData];
+
+                renderNotes(window.filteredNotes, searchTerm);
+
+            } catch (error) {
+                showToast(`Tải ghi chú thất bại: ${error.message}`, 'error');
+            }
+        }
+
+        function renderNotes(notesToRender, searchTerm = '') {
+            container.innerHTML = '';
+
+            let displayList = [...notesToRender];
+            if (activeNoteId) {
+                const activeNoteIndex = displayList.findIndex(n => n.id === activeNoteId);
+                if (activeNoteIndex > -1) {
+                    const [activeNote] = displayList.splice(activeNoteIndex, 1);
+                    displayList.unshift(activeNote);
+                }
+            }
+
+            if (displayList.length === 0) {
+                const emptyMessage = searchTerm
+                    ? `<div class="col-12 text-center text-muted p-5"><h6>Không tìm thấy ghi chú nào.</h6></div>`
+                    : `<div class="col-12 text-center text-muted p-5"><h6>Không có ghi chú nào.</h6><button class="btn btn-primary mt-3" onclick="window.prepareAddNoteModal()"><i class="bi bi-plus-lg"></i> Tạo ghi chú đầu tiên</button></div>`;
+                container.innerHTML = emptyMessage;
+                return;
+            }
+
+            displayList.forEach(note => container.appendChild(createNoteCard(note, searchTerm)));
+
+            // Re-apply active class after rendering
+            if (activeNoteId) {
+                const activeCard = document.querySelector(`.card[data-note-id="${activeNoteId}"]`);
+                if (activeCard) activeCard.classList.add('note-card-active');
+            }
+        }
+
+        function createNoteCard(note, searchTerm = '') {
+            const col = document.createElement('div');
+            col.className = 'note-card-wrapper';
+
+            const markedIconHTML = note.is_marked ? `<i class="bi bi-star-fill text-warning me-2" title="Đã đánh dấu"></i>` : '';
+
+            let title = note.title_html || 'Ghi chú không tiêu đề';
+            let content = note.content_html || '...';
+
+            // Apply profile highlight for search
+            if (searchTerm) {
+                const regex = new RegExp(`(<span class="has-profile"[^>]*data-profile-id="${searchTerm}"[^>]*?)>`, 'i');
+                title = title.replace(regex, `$1 class="has-profile profile-highlight">`);
+                content = content.replace(regex, `$1 class="has-profile profile-highlight">`);
+            }
+
+            // Create card structure first
+            const card = document.createElement('div');
+            card.className = 'card h-100';
+            card.setAttribute('data-note-id', note.id);
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body d-flex flex-column';
+            
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'd-flex justify-content-between align-items-center mb-2';
+            headerDiv.innerHTML = `
+                <h5 class="card-title mb-0 text-truncate">${title}</h5>
+                <div class="d-flex align-items-center flex-shrink-0 ms-2">
+                    ${markedIconHTML}
+                    <small class="text-muted" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">${formatTimeAgo(note.modified_at)}</small>
+                </div>
+            `;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'card-text card-note-body flex-grow-1';
+            contentDiv.innerHTML = content;
+            
+            cardBody.appendChild(headerDiv);
+            cardBody.appendChild(contentDiv);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+
+            const cardElement = col.querySelector('.card');
+            cardElement.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                showNoteDetail(note);
+            });
+
+            return col;
+        }
+
+        function openDetailPanel() {
+            listWrapper.classList.add('shrunk');
+            detailWrapper.classList.add('visible');
+            container.classList.remove('notes-grid-view');
+            container.classList.add('notes-list-view');
+        }
+
+        window.closeDetailPanel = () => {
+            listWrapper.classList.remove('shrunk');
+            detailWrapper.classList.remove('visible');
+            container.classList.remove('notes-list-view');
+            container.classList.add('notes-grid-view');
+            document.querySelector('.note-card-active')?.classList.remove('note-card-active');
+            activeNoteId = null;
+
+            // Reset detail panel
+            const detailHeader = detailWrapper.querySelector('.card-header');
+            const detailContent = detailWrapper.querySelector('#notes-detail-content');
+            const detailPlaceholder = detailWrapper.querySelector('#notes-detail-placeholder');
+            if (detailHeader) detailHeader.innerHTML = '';
+            if (detailContent) detailContent.classList.add('d-none');
+            if (detailPlaceholder) detailPlaceholder.classList.remove('d-none');
+        };
+
+        function showNoteDetail(note) {
+            activeNoteId = note.id;
+
+            document.querySelectorAll('#notes-container .card').forEach(card => card.classList.remove('note-card-active'));
+            const clickedCard = document.querySelector(`.card[data-note-id="${note.id}"]`);
+            if (clickedCard) clickedCard.classList.add('note-card-active');
+
+            openDetailPanel();
+
+            const detailHeader = detailWrapper.querySelector('.card-header');
+            const detailContent = detailWrapper.querySelector('#notes-detail-content');
+            const detailPlaceholder = detailWrapper.querySelector('#notes-detail-placeholder');
+
+            detailHeader.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <small class="text-muted" title="${new Date(note.modified_at).toLocaleString('vi-VN')}">
+                    <i class="bi bi-clock-history"></i> ${formatTimeAgo(note.modified_at)}
+                </small>
+                <div>
+                    <button class="btn btn-sm btn-primary" onclick="window.prepareAddNoteModal()" title="Thêm ghi chú mới"><i class="bi bi-plus-lg"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="window.deleteNoteWrapper('${note.id}', event)" title="Xóa ghi chú"><i class="bi bi-trash-fill"></i></button>
+                    <button class="btn-close btn-close-white" onclick="window.closeDetailPanel()" title="Đóng chi tiết" style="font-size: 0.8rem;"></button>
+                </div>
+            </div>`;
+
+            // --- ⭐ BẮT ĐẦU THÊM CODE MỚI TỪ ĐÂY ---
+            let titleHtml = note.title_html || '';
+            let contentHtml = note.content_html || '';
+            const searchInput = document.getElementById('notes-search-input');
+            const searchTerm = searchInput ? searchInput.value.trim() : ''; // Lấy giá trị từ ô tìm kiếm
+
+            if (searchTerm) {
+                // Tạo regex để tìm kiếm (không phân biệt hoa thường, toàn cục)
+                // Escape các ký tự đặc biệt trong search term để tránh lỗi regex
+                const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+
+                // Highlight text như Telegram (background màu xanh đậm)
+                // Sử dụng replace với $1 để giữ nguyên cách viết hoa/thường của từ gốc
+                titleHtml = titleHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+                contentHtml = contentHtml.replace(regex, '<span style="background-color: #007AFF !important; color: white !important; padding: 1px 2px !important; border-radius: 2px !important; display: inline !important;">$1</span>');
+            }
+            // --- ⭐ KẾT THÚC CODE MỚI ---
+
+            // Sử dụng titleHtml và contentHtml đã được xử lý
+            detailContent.innerHTML = `<div id="detail-editable-full" contenteditable="true" spellcheck="false" data-placeholder="Dòng đầu là tiêu đề...">${titleHtml}<br>${contentHtml}</div>`;
+            const editorEl = document.getElementById('detail-editable-full');
+
+            // Force disable spellcheck via JavaScript
+            editorEl.spellcheck = false;
+
+            // Set initial content for comparison
+            editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
+
+            // Focus handler - update initial content
+            editorEl.addEventListener('focus', () => {
+                editorEl.setAttribute('data-initial-content', editorEl.innerHTML);
+            });
+
+            // Blur handler - save immediately if content changed
+            editorEl.addEventListener('blur', () => {
+                if (blockNextBlurSave) {
+                    blockNextBlurSave = false;
+                    return;
+                }
+                saveNoteChanges(note.id);
+            });
+
+            // Keydown handler - prevent deleting entire auto-detected spans
+            editorEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    console.log('[editor keydown] ⌨️ Delete key pressed:', e.key);
+                    
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    
+                    const range = selection.getRangeAt(0);
+                    
+                    // Check if we're about to delete an auto-detected span
+                    if (e.key === 'Backspace' && range.collapsed) {
+                        // Backspace - check node before cursor
+                        const nodeBefore = range.startContainer.previousSibling || 
+                                         range.startContainer.parentNode?.previousSibling;
+                        
+                        if (nodeBefore && (nodeBefore.classList?.contains('auto-command') || 
+                                          nodeBefore.classList?.contains('auto-quoted'))) {
+                            console.log('[editor keydown] 🛑 Preventing Backspace - unwrapping span:', nodeBefore);
+                            e.preventDefault();
+                            
+                            // Unwrap the span: replace with text content
+                            const textNode = document.createTextNode(nodeBefore.textContent);
+                            nodeBefore.parentNode.replaceChild(textNode, nodeBefore);
+                            
+                            // Move cursor to end of text
+                            const newRange = document.createRange();
+                            newRange.setStart(textNode, textNode.length);
+                            newRange.collapse(true);
+                            selection.removeAllRanges();
+                            selection.addRange(newRange);
+                            return;
+                        }
+                    } else if (e.key === 'Delete' && range.collapsed) {
+                        // Delete - check node after cursor
+                        const nodeAfter = range.endContainer.nextSibling || 
+                                        range.endContainer.parentNode?.nextSibling;
+                        
+                        if (nodeAfter && (nodeAfter.classList?.contains('auto-command') || 
+                                         nodeAfter.classList?.contains('auto-quoted'))) {
+                            console.log('[editor keydown] 🛑 Preventing Delete - unwrapping span:', nodeAfter);
+                            e.preventDefault();
+                            
+                            // Unwrap the span: replace with text content
+                            const textNode = document.createTextNode(nodeAfter.textContent);
+                            nodeAfter.parentNode.replaceChild(textNode, nodeAfter);
+                            return;
+                        }
+                    }
+                    
+                    // If cursor is inside an auto-detected span, unwrap it first
+                    const currentNode = range.startContainer.parentNode;
+                    if (currentNode && (currentNode.classList?.contains('auto-command') || 
+                                       currentNode.classList?.contains('auto-quoted'))) {
+                        console.log('[editor keydown] 🔓 Cursor inside auto-span, unwrapping first:', currentNode);
+                        
+                        // Save cursor position
+                        const offset = range.startOffset;
+                        
+                        // Unwrap the span
+                        const textNode = document.createTextNode(currentNode.textContent);
+                        currentNode.parentNode.replaceChild(textNode, currentNode);
+                        
+                        // Restore cursor position
+                        const newRange = document.createRange();
+                        newRange.setStart(textNode, Math.min(offset, textNode.length));
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                        
+                        // Don't prevent default - let normal delete happen
+                    }
+                }
+            });
+
+            editorEl.addEventListener('contextmenu', handleEditorContextMenu);
+
+            // Click handler for links - open in new tab
+            editorEl.addEventListener('click', (e) => {
+                const link = e.target.closest('a');
+                if (link && link.href) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.open(link.href, '_blank', 'noopener,noreferrer');
+                }
+            });
+
+            // Paste handler - auto-save after paste and auto-convert URLs to links
+            editorEl.addEventListener('paste', (e) => {
+                e.preventDefault();
+
+                // Get the pasted content as plain text from the clipboard
+                let plainText = (e.clipboardData || window.clipboardData).getData('text');
+                if (!plainText) {
+                    return;
+                }
+
+                // Auto-detect patterns (numbers, /commands, 'quoted text)
+                let processedHtml = autoDetectPatterns(plainText);
+
+                // URL regex pattern - handles http, https, ftp, and file protocols
+                const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+
+                if (urlRegex.test(processedHtml)) {
+                    // If URLs are found, replace them with HTML anchor tags
+                    processedHtml = processedHtml.replace(urlRegex, (url) => {
+                        // Create a styled and secure link
+                        return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #69b3ff; text-decoration: underline;">${url}</a>`;
+                    });
+                }
+
+                // Insert the processed HTML into the editor
+                document.execCommand('insertHTML', false, processedHtml);
+
+                // Auto-save after paste
+                setTimeout(() => {
+                    if (activeNoteId) {
+                        saveNoteChanges(activeNoteId, true);
+                    }
+                }, 100);
+            });
+
+            // Input handler - auto-detect patterns when typing (on Space/Enter)
+            let typingTimer;
+            editorEl.addEventListener('input', (e) => {
+                console.log('[editor input] ⌨️ Input event triggered');
+                
+                // Clear previous timer
+                clearTimeout(typingTimer);
+                
+                // Wait 500ms after user stops typing
+                typingTimer = setTimeout(() => {
+                    console.log('[editor input] 🔄 Processing auto-detection after typing pause');
+                    
+                    // Get current content
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    
+                    const range = selection.getRangeAt(0);
+                    const currentNode = range.startContainer;
+                    
+                    // Only process text nodes that are not already in auto-detected spans
+                    if (currentNode.nodeType === Node.TEXT_NODE) {
+                        const parentNode = currentNode.parentNode;
+                        
+                        // Skip if already in auto-detected span
+                        if (parentNode.classList?.contains('auto-command') ||
+                            parentNode.classList?.contains('auto-quoted')) {
+                            console.log('[editor input] ⏭️ Already in auto-span, skipping');
+                            return;
+                        }
+                        
+                        const text = currentNode.textContent;
+                        console.log('[editor input] 📝 Processing text node:', text);
+                        
+                        // Check if text contains patterns to detect
+                        const hasCommand = /\/{1,2}[a-zA-Z0-9_]+/.test(text);
+                        const hasQuoted = /'[a-zA-Z0-9_]+/.test(text);
+                        
+                        if (hasCommand || hasQuoted) {
+                            console.log('[editor input] ✅ Found patterns - applying auto-detection');
+                            
+                            // Save cursor position relative to parent
+                            const cursorOffset = range.startOffset;
+                            
+                            // Apply auto-detection
+                            const processedHtml = autoDetectPatterns(text);
+                            
+                            // Create temporary container
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = processedHtml;
+                            
+                            // Replace text node with processed nodes
+                            const fragment = document.createDocumentFragment();
+                            while (tempDiv.firstChild) {
+                                fragment.appendChild(tempDiv.firstChild);
+                            }
+                            
+                            parentNode.replaceChild(fragment, currentNode);
+                            
+                            // Restore cursor position (best effort)
+                            try {
+                                const newRange = document.createRange();
+                                const textNodes = [];
+                                const walker = document.createTreeWalker(
+                                    parentNode,
+                                    NodeFilter.SHOW_TEXT,
+                                    null,
+                                    false
+                                );
+                                
+                                let node;
+                                while (node = walker.nextNode()) {
+                                    textNodes.push(node);
+                                }
+                                
+                                if (textNodes.length > 0) {
+                                    const lastNode = textNodes[textNodes.length - 1];
+                                    newRange.setStart(lastNode, lastNode.length);
+                                    newRange.collapse(true);
+                                    selection.removeAllRanges();
+                                    selection.addRange(newRange);
+                                }
+                            } catch (err) {
+                                console.error('[editor input] ❌ Failed to restore cursor:', err);
+                            }
+                            
+                            // Re-initialize auto-detected elements
+                            initializeAutoDetectedElements();
+                        }
+                    }
+                }, 500);
+            });
+
+            // Initialize profile interactions and apply saved colors
+            initializeProfileInteractions();
+            initializeAutoDetectedElements();
+            applySavedColors();
+
+            // Profile highlight logic for search
+            const currentSearchTerm = searchInput.value.trim().toLowerCase();
+            if (currentSearchTerm) {
+                const matchingSpans = editorEl.querySelectorAll(`.has-profile[data-profile-id="${currentSearchTerm}" i]`);
+                matchingSpans.forEach(span => {
+                    span.classList.add('profile-highlight');
+                    setTimeout(() => {
+                        span.classList.remove('profile-highlight');
+                    }, 600);
+                });
+
+                if (matchingSpans.length > 0) {
+                    matchingSpans[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            detailPlaceholder.classList.add('d-none');
+            detailContent.classList.remove('d-none');
+        }
+
+        async function saveNoteChanges(noteId, forceSave = false) {
+            if (!noteId) return;
+
+            const editorEl = document.getElementById('detail-editable-full');
+            if (!editorEl) return;
+
+            const initialContent = editorEl.getAttribute('data-initial-content');
+            const currentContent = editorEl.innerHTML;
+
+            // Skip save if content unchanged and not forced
+            if (!forceSave && currentContent === initialContent) {
+                return;
+            }
+
+            const fullContent = editorEl.innerHTML;
+            const parts = fullContent.split('<br>');
+            const payload = {
+                title_html: parts.shift() || '',
+                content_html: parts.join('<br>')
+            };
+
+            try {
+                showToast('Đang lưu...', 'info');
+
+                const response = await fetch(`{{ url_for('notes_feature.api_update_note', note_id='') }}${noteId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
+
+                const updatedNote = await response.json();
+
+                // Update local data immediately
+                const index = window.notesData.findIndex(n => n.id === noteId);
+                if (index !== -1) {
+                    window.notesData[index] = updatedNote;
+                }
+
+                // Update initial content to new saved state
+                editorEl.setAttribute('data-initial-content', currentContent);
+
+                showToast('Đã lưu thay đổi!', 'success');
+
+                // Update only the specific card without full re-render
+                const cardWrapper = document.querySelector(`[data-note-id="${noteId}"]`);
+                if (cardWrapper) {
+                    const card = cardWrapper.querySelector('.card');
+                    if (card) {
+                        // Update card preview content
+                        const cardTitle = card.querySelector('.card-title');
+                        const cardBody = card.querySelector('.card-note-body');
+                        const timeStamp = card.querySelector('.text-muted[title*="Ngày"]');
+
+                        if (cardTitle) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = updatedNote.title_html;
+                            cardTitle.innerHTML = tempDiv.textContent || tempDiv.innerText;
+                        }
+
+                        if (cardBody) {
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = updatedNote.content_html;
+                            cardBody.innerHTML = tempDiv.textContent || tempDiv.innerText;
+                        }
+
+                        if (timeStamp) {
+                            timeStamp.innerHTML = `<i class="bi bi-clock-history me-1"></i>${formatTimeAgo(updatedNote.modified_at)}`;
+                        }
+                    }
+                }
+
+            } catch (error) {
+                showToast('Lỗi khi tự động lưu!', 'error');
+            }
+        }
+
+        window.prepareAddNoteModal = () => {
+            form.reset();
+            modalTitle.textContent = 'Thêm Ghi Chú Mới';
+            editIdInput.value = '';
+            titleInput.innerHTML = '';
+            contentEditor.innerHTML = '';
+
+            // Force disable spellcheck
+            titleInput.spellcheck = false;
+            contentEditor.spellcheck = false;
+
+            notesModal.show();
+        };
+
+        window.addNewNoteFromContextMenu = () => {
+            hideAllContextMenus();
+            window.prepareAddNoteModal();
+        };
+
+        // Confirm Delete Modal
+        const confirmDeleteModal = new bootstrap.Modal(document.getElementById('notes-confirmDeleteModal'));
+        const confirmDeleteBtn = document.getElementById('notes-confirm-delete-btn');
+        let pendingDeleteNoteId = null;
+
+        window.deleteNoteWrapper = async (id, event) => {
+            event.stopPropagation();
+            pendingDeleteNoteId = id;
+            confirmDeleteModal.show();
+        };
+
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!pendingDeleteNoteId) return;
+
+            try {
+                const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${pendingDeleteNoteId}`, { method: 'POST' });
+                if (!response.ok) throw new Error('Lỗi khi xóa trên server');
+
+                if (pendingDeleteNoteId === activeNoteId) window.closeDetailPanel();
+
+                confirmDeleteModal.hide();
+                pendingDeleteNoteId = null;
+
+                await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                showToast('Đã xóa ghi chú.', 'info');
+            } catch (error) {
+                showToast('Lỗi: Không thể xóa ghi chú.', 'error');
+                confirmDeleteModal.hide();
+            }
+        });
+
+
+        // --- Context Menu Logic ---
+        function restoreSelection() {
+            if (savedSelection) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(savedSelection);
+            }
+        }
+
+
+        function handleEditorContextMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideAllContextMenus();
+
+            const selection = window.getSelection();
+            if (selection.toString().length > 0) {
+                savedSelection = selection.getRangeAt(0).cloneRange();
+                showSmartMenu(editorContextMenu, e.clientX, e.clientY);
+            }
+        }
+
+        function handleTabContextMenu(e) {
+            const noteCard = e.target.closest('.card[data-note-id]');
+            if (!noteCard) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideAllContextMenus();
+                showSmartMenu(notesTabMenu, e.clientX, e.clientY);
+            }
+        }
+
+
+
+        // --- Event Listeners ---
+
+        // Prevent default behavior on mousedown for context menu items to avoid losing selection
+        editorContextMenu.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.menu-item')) {
+                e.preventDefault();
+            }
+        });
+
+        // Main form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = editIdInput.value;
+            const url = id
+                ? `{{ url_for('notes_feature.api_update_note', note_id='') }}${id}`
+                : "{{ url_for('notes_feature.api_add_note') }}";
+
+            const payload = {
+                title_html: titleInput.innerHTML,
+                content_html: contentEditor.innerHTML,
+            };
+
+            if (!payload.title_html && !payload.content_html) {
+                showAlert('Ghi chú không được để trống.');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error('Lỗi khi lưu trên server');
+                const savedNote = await response.json();
+                notesModal.hide();
+                await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                showToast(id ? 'Đã cập nhật ghi chú!' : 'Đã tạo ghi chú mới!', 'success');
+                showNoteDetail(savedNote); // Show the newly created/updated note
+            } catch (error) {
+                showToast('Lỗi: Không thể lưu ghi chú.', 'error');
+            }
+        });
+
+        // Search input - Enhanced search like original version
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const notesToShow = searchTerm
+                ? window.notesData.filter(note => {
+                    const titleLower = (note.title_html || '').toLowerCase();
+                    const contentLower = (note.content_html || '').toLowerCase();
+                    const searchLower = searchTerm.toLowerCase();
+
+                    // Check 1: Search in visible title
+                    if (titleLower.includes(searchLower)) return true;
+
+                    // Check 2: Search in visible content (plain text)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = note.content_html || '';
+                    if (tempDiv.textContent.toLowerCase().includes(searchLower)) return true;
+
+                    // Check 3: Search for the profile ID attribute directly in the HTML string
+                    // This is crucial for finding IDs that are not part of the visible text.
+                    const profileIdSearchString = `data-profile-id="${searchLower}"`.toLowerCase();
+                    if (contentLower.includes(profileIdSearchString)) return true;
+
+                    return false;
+                })
+                : window.notesData;
+
+            window.filteredNotes = notesToShow;
+            renderNotes(notesToShow, searchTerm);
+        });
+
+        // Context menu actions for note card
+        noteCardMenu.addEventListener('click', async (e) => {
+            const markItem = e.target.closest('#context-mark-note');
+            const deleteItem = e.target.closest('#context-delete-note');
+
+            e.stopPropagation();
+            const noteId = noteCardMenu.dataset.noteId;
+            if (!noteId) return;
+
+            if (markItem) {
+                // Handle mark/unmark
+                try {
+                    const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
+                    if (!response.ok) throw new Error('Server error');
+                    await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                    showToast('Đã cập nhật đánh dấu!', 'success');
+                } catch (error) {
+                    showToast('Lỗi khi đánh dấu.', 'error');
+                } finally {
+                    hideAllContextMenus();
+                }
+            } else if (deleteItem) {
+                // Handle delete
+                hideAllContextMenus();
+                pendingDeleteNoteId = noteId;
+                confirmDeleteModal.show();
+            }
+        });
+
+        document.querySelector('#context-copy').addEventListener('click', () => {
+            restoreSelection();
+            document.execCommand('copy');
+            hideAllContextMenus();
+        });
+        document.querySelector('#context-bold').addEventListener('click', () => {
+            restoreSelection();
+            document.execCommand('bold');
+            hideAllContextMenus();
+            setTimeout(() => saveNoteChanges(activeNoteId), 100);
+        });
+
+        document.querySelector('#context-color .color-palette').addEventListener('click', (e) => {
+            if (e.target.matches('span[data-color]')) {
+                restoreSelection();
+                const color = e.target.dataset.color;
+                document.execCommand('foreColor', false, color);
+                hideAllContextMenus();
+                setTimeout(() => saveNoteChanges(activeNoteId), 100);
+            }
+        });
+
+        document.querySelector('#context-link').addEventListener('click', () => {
+            // The selection is already saved, just show the modal
+            linkUrlInput.value = 'https://';
+            addLinkModal.show();
+        });
+        saveLinkBtn.addEventListener('click', () => {
+            const url = linkUrlInput.value.trim();
+            if (url) {
+                restoreSelection(); // Restore selection before creating link
+                document.execCommand('createLink', false, url);
+                addLinkModal.hide();
+                savedSelection = null; // Clear saved selection
+                setTimeout(() => saveNoteChanges(activeNoteId), 100);
+            }
+        });
+
+        // Profile Modal Elements
+        const profileModal = new bootstrap.Modal(document.getElementById('notes-addProfileModal'));
+        const profileIdInput = document.getElementById('notes-profile-id');
+        const profilePasswordInput = document.getElementById('notes-profile-password');
+        const profileContentInput = document.getElementById('notes-profile-content-editor');
+        const saveProfileBtn = document.getElementById('notes-save-profile-btn');
+        const deleteProfileBtn = document.getElementById('notes-delete-profile-btn');
+        const copyProfileIdBtn = document.getElementById('notes-copy-profile-id-btn');
+        const copyProfilePasswordBtn = document.getElementById('notes-copy-profile-password-btn');
+        const profileSpanMenu = document.getElementById('profile-span-context-menu');
+        let currentProfileSpan = null;
+
+        // Image Modal Context Menu
+        const imageModal = document.getElementById('np-imagePreviewModal');
+        const imagePreview = document.getElementById('np-imagePreview');
+        const imageModalContextMenu = document.getElementById('image-modal-context-menu');
+        let currentImageData = null;
+
+        // Function để copy ảnh
+        async function copyImageToClipboard() {
+            if (!currentImageData) {
+                showToast('Không có ảnh để copy', 'error');
+                return;
+            }
+
+            try {
+                // Convert data URL to blob
+                const response = await fetch(currentImageData);
+                const blob = await response.blob();
+                
+                // Copy to clipboard
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        [blob.type]: blob
+                    })
+                ]);
+                
+                showToast('Đã copy ảnh vào clipboard', 'success');
+                hideAllContextMenus();
+            } catch (error) {
+                console.error('Error copying image:', error);
+                showToast('Lỗi khi copy ảnh', 'error');
+            }
+        }
+
+        // Event listener cho modal ảnh
+        if (imagePreview) {
+            imagePreview.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                hideAllContextMenus();
+                
+                // Lưu data của ảnh hiện tại
+                currentImageData = imagePreview.src;
+                showSmartMenu(imageModalContextMenu, e.clientX, e.clientY);
+            });
+        }
+
+        // Event listener cho context menu copy
+        document.getElementById('context-copy-image')?.addEventListener('click', copyImageToClipboard);
+
+        // Image compression and paste functionality
+        async function compressImageFile(file, { maxW = 900, maxH = 900, quality = 0.76 } = {}) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+                    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+                    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob((blob) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result); // dataURL JPEG
+                        reader.onerror = reject; reader.readAsDataURL(blob);
+                    }, 'image/jpeg', quality);
+                    URL.revokeObjectURL(url);
+                };
+                img.onerror = reject; img.src = url;
+            });
+        }
+
+        async function makeThumb(dataURL, maxSide = 200, quality = 0.82){
+            return new Promise((resolve, reject)=>{
+                const img = new Image();
+                img.onload = ()=>{
+                    const r = Math.min(maxSide/img.width, maxSide/img.height, 1);
+                    const w = Math.round(img.width*r), h = Math.round(img.height*r);
+                    const c = document.createElement('canvas'); c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = reject; img.src = dataURL;
+            });
+        }
+
+        function enablePasteImagesInto(el) {
+            if (!el) return;
+            
+            // Remove existing paste listeners to prevent duplicates
+            el.removeEventListener('paste', handlePasteImages);
+            el.addEventListener('paste', handlePasteImages);
+        }
+        
+        function handlePasteImages(e) {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            
+            // Kiểm tra xem có ảnh trong clipboard không
+            let hasImage = false;
+            for (const it of items) {
+                if (it.kind === 'file' && it.type.startsWith('image/')) {
+                    hasImage = true;
+                    break;
+                }
+            }
+            
+            if (hasImage) {
+                e.preventDefault(); // Ngăn chặn hoàn toàn paste mặc định
+                e.stopPropagation(); // Ngăn chặn event bubbling
+                
+                for (const it of items) {
+                    if (it.kind === 'file' && it.type.startsWith('image/')) {
+                        const file = it.getAsFile();
+                        
+                        // Ảnh gốc 100% không nén (để xem full size)
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const originalData = reader.result;
+                            // thumbnail hiển thị trong khu vực riêng (nén nhẹ)
+                            makeThumb(originalData, 150, 0.9).then(thumbData => {
+                                addImageToThumbnailArea(originalData, thumbData);
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                        break; // Chỉ xử lý ảnh đầu tiên
+                    }
+                }
+            }
+        }
+
+        function addImageToThumbnailArea(fullData, thumbData) {
+            const container = document.getElementById('profile-images-container');
+            const thumbnailsArea = document.getElementById('profile-images-thumbnails');
+            
+            if (!container || !thumbnailsArea) return;
+            
+            // Tạo thumbnail element
+            const thumbElement = document.createElement('div');
+            thumbElement.className = 'position-relative';
+            thumbElement.style.cssText = 'width: 80px; height: 80px; cursor: pointer;';
+            
+            thumbElement.innerHTML = `
+                <img src="${thumbData}" alt="thumbnail" 
+                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+                <button class="btn btn-sm btn-danger position-absolute" 
+                        style="top: -5px; right: -5px; padding: 2px 6px; font-size: 10px; z-index: 10;"
+                        type="button">
+                    ×
+                </button>
+            `;
+            
+            // Thêm event listener cho button delete
+            const deleteBtn = thumbElement.querySelector('button');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeImageFromThumbnailArea(deleteBtn);
+                });
+            }
+            
+            // Lưu data gốc vào attribute
+            thumbElement.setAttribute('data-full', fullData);
+            
+            // Thêm vào khu vực thumbnails
+            thumbnailsArea.appendChild(thumbElement);
+            
+            // Hiện container nếu đang ẩn
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+            }
+            
+            // Thêm event click để xem ảnh full
+            thumbElement.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') {
+                    const img = document.getElementById('np-imagePreview');
+                    if (img) {
+                        img.src = fullData;
+                        new bootstrap.Modal(document.getElementById('np-imagePreviewModal')).show();
+                    }
+                }
+            });
+        }
+
+        function removeImageFromThumbnailArea(button) {
+            const thumbElement = button.closest('.position-relative');
+            
+            if (thumbElement) {
+                thumbElement.remove();
+                
+                // Ẩn container nếu không còn ảnh nào
+                const thumbnailsArea = document.getElementById('profile-images-thumbnails');
+                if (thumbnailsArea && thumbnailsArea.children.length === 0) {
+                    document.getElementById('profile-images-container').style.display = 'none';
+                }
+            }
+        }
+
+        // Gắn handler khi mở modal Gán Profile
+        document.getElementById('notes-addProfileModal')
+            ?.addEventListener('shown.bs.modal', () => {
+                const ed = document.getElementById('notes-profile-content-editor');
+                enablePasteImagesInto(ed);
+                ed?.focus();
+                
+                // Clear thumbnail area if creating new profile
+                if (!currentProfileSpan) {
+                    clearThumbnailArea();
+                }
+            });
+
+        function clearThumbnailArea() {
+            const container = document.getElementById('profile-images-container');
+            const thumbnailsArea = document.getElementById('profile-images-thumbnails');
+            
+            if (thumbnailsArea) {
+                thumbnailsArea.innerHTML = '';
+            }
+            if (container) {
+                container.style.display = 'none';
+            }
+        }
+
+        // click thumb để xem full
+        document.getElementById('notes-addProfileModal')
+            ?.addEventListener('click', (e) => {
+                const thumb = e.target.closest('.tg-thumb');
+                if (!thumb) return;
+                const full = thumb.getAttribute('data-full') || thumb.querySelector('img')?.src;
+                const img = document.getElementById('np-imagePreview');
+                if (full && img) {
+                    img.src = full;
+                    new bootstrap.Modal('#np-imagePreviewModal').show();
+                }
+            });
+
+
+        // Profile: Click "Gán Profile" in context menu
+        document.querySelector('#context-profile').addEventListener('click', () => {
+            const selection = window.getSelection();
+            if (selection.toString().length === 0) {
+                showAlert('Vui lòng bôi đen đoạn chữ cần gán Profile.');
+                return;
+            }
+
+            savedSelection = selection.getRangeAt(0).cloneRange();
+            profileIdInput.value = '';
+            profilePasswordInput.value = '';
+            profileContentInput.innerHTML = '';
+            deleteProfileBtn.style.display = 'none';
+            currentProfileSpan = null;
+            blockNextBlurSave = true;
+            hideAllContextMenus(true); // Preserve savedSelection!
+            profileModal.show();
+        });
+
+        // Profile: Save button
+        saveProfileBtn.addEventListener('click', () => {
+            const profileId = profileIdInput.value.trim();
+            const profilePassword = profilePasswordInput.value.trim();
+            const profileContent = document.getElementById('notes-profile-content-editor')?.innerHTML.trim() || '';
+            
+            // Thu thập ảnh từ thumbnail area
+            const thumbnailImages = [];
+            const thumbnailElements = document.querySelectorAll('#profile-images-thumbnails .position-relative[data-full]');
+            thumbnailElements.forEach(el => {
+                const fullData = el.getAttribute('data-full');
+                if (fullData) {
+                    thumbnailImages.push(fullData);
+                }
+            });
+            
+            // 1) Giữ content là text thuần
+            const finalContent = profileContent;
+
+            // 2) Lưu ảnh thành JSON string
+            const imagesJson = JSON.stringify(thumbnailImages);
+
+            // 3) Dọn dữ liệu cũ tự động nếu phát hiện profileSpan.dataset.profileContent còn chứa .tg-thumb
+            if (currentProfileSpan && currentProfileSpan.dataset.profileContent) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = currentProfileSpan.dataset.profileContent;
+                const hasLegacyImages = tempDiv.querySelectorAll('.tg-thumb').length > 0;
+                
+                if (hasLegacyImages) {
+                    // Gỡ ảnh cũ khỏi content và lưu lại
+                    const cleanContent = tempDiv.cloneNode(true);
+                    cleanContent.querySelectorAll('.tg-thumb, img').forEach(n => n.remove());
+                    currentProfileSpan.dataset.profileContent = cleanContent.innerHTML;
+                }
+            }
+            
+            if (!profileId && !finalContent && thumbnailImages.length === 0) {
+                showAlert('Nhập ít nhất 1 trường: Nội dung hoặc ID hoặc ảnh.');
+                return;
+            }
+
+            if (currentProfileSpan) {
+                // Editing existing profile
+                currentProfileSpan.dataset.profileId = profileId;
+                currentProfileSpan.dataset.profilePassword = profilePassword;
+                currentProfileSpan.dataset.profileContent = finalContent;   // text only
+                currentProfileSpan.dataset.profileImages = imagesJson;       // ảnh
+                if (profileId) currentProfileSpan.textContent = profileId;
+            } else if (savedSelection) {
+                // Creating new profile
+                const span = document.createElement('span');
+                span.className = 'has-profile';
+                span.dataset.profileId = profileId;
+                span.dataset.profilePassword = profilePassword;
+                span.dataset.profileContent = finalContent; // text only
+                span.dataset.profileImages = imagesJson;   // ảnh
+                span.style.color = '#00e0ff';
+                span.appendChild(savedSelection.extractContents());
+                savedSelection.insertNode(span);
+            } else {
+                // Không có selection và không đang edit -> lỗi logic
+                showAlert('Lỗi: Không tìm thấy selection hoặc profile đang chỉnh sửa.');
+                return;
+            }
+
+            profileModal.hide();
+            savedSelection = null;
+            currentProfileSpan = null;
+            saveNoteChanges(activeNoteId, true);
+        });
+
+        // Profile: Delete button
+        deleteProfileBtn.addEventListener('click', async () => {
+            if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
+                // Unwrap the span, replacing it with its own text content
+                const parent = currentProfileSpan.parentNode;
+                while (currentProfileSpan.firstChild) {
+                    parent.insertBefore(currentProfileSpan.firstChild, currentProfileSpan);
+                }
+                parent.removeChild(currentProfileSpan);
+
+                profileModal.hide();
+                currentProfileSpan = null;
+                saveNoteChanges(activeNoteId, true);
+            }
+        });
+
+        // Helper function for copy-to-clipboard feedback
+        const copyFeedback = (button) => {
+            const originalIcon = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+            setTimeout(() => {
+                button.innerHTML = originalIcon;
+            }, 1500);
+        };
+
+        // Profile: Copy buttons
+        copyProfileIdBtn.addEventListener('click', function () {
+            const idToCopy = profileIdInput.value;
+            if (idToCopy) {
+                navigator.clipboard.writeText(idToCopy).then(() => {
+                    copyFeedback(this);
+                }).catch(err => {
+                    console.error('Failed to copy ID: ', err);
+                    showAlert('Lỗi khi sao chép ID.');
+                });
+            }
+        });
+
+        copyProfilePasswordBtn.addEventListener('click', function () {
+            const passwordToCopy = profilePasswordInput.value;
+            if (passwordToCopy) {
+                navigator.clipboard.writeText(passwordToCopy).then(() => {
+                    copyFeedback(this);
+                }).catch(err => {
+                    console.error('Failed to copy password: ', err);
+                    showAlert('Lỗi khi sao chép mật khẩu.');
+                });
+            }
+        });
+
+        // Profile Span Context Menu
+        document.addEventListener('contextmenu', (e) => {
+            const profileSpan = e.target.closest('.has-profile');
+            if (profileSpan) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideAllContextMenus();
+                currentProfileSpan = profileSpan;
+                showSmartMenu(profileSpanMenu, e.clientX, e.clientY);
+            }
+        });
+
+        // Profile Span: Click to edit
+        document.addEventListener('click', (e) => {
+            const profileSpan = e.target.closest('.has-profile');
+            if (profileSpan && e.target.classList.contains('has-profile')) {
+                e.preventDefault();
+                e.stopPropagation();
+                currentProfileSpan = profileSpan;
+                profileIdInput.value = profileSpan.dataset.profileId || '';
+                profilePasswordInput.value = profileSpan.dataset.profilePassword || '';
+                
+                const fullContent = profileSpan.dataset.profileContent || '';
+                const imagesJson = profileSpan.dataset.profileImages;
+
+                let imageArray = [];
+                if (imagesJson) {
+                    try { 
+                        imageArray = JSON.parse(imagesJson) || []; 
+                    } catch {}
+                }
+
+                if (imageArray.length > 0) {
+                    // a) text: đảm bảo không có ảnh lẫn trong content
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = fullContent;
+                    // phòng legacy: nếu ai đó còn .tg-thumb trong content => gỡ ra
+                    tmp.querySelectorAll('.tg-thumb, img').forEach(n => n.remove());
+                    profileContentInput.innerHTML = tmp.innerHTML;
+
+                    // b) thumbnails từ mảng ảnh
+                    const container = document.getElementById('profile-images-container');
+                    const thumbs = document.getElementById('profile-images-thumbnails');
+                    thumbs.innerHTML = '';
+                    container.style.display = 'block';
+                    imageArray.forEach(full => {
+                        makeThumb(full, 150, 0.9).then(thumb => addImageToThumbnailArea(full, thumb));
+                    });
+                } else {
+                    // LEGACY fallback: tách ảnh .tg-thumb đang cũ trong content (đã có sẵn logic)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = fullContent;
+                    const images = tempDiv.querySelectorAll('.tg-thumb');
+                    images.forEach(n => n.remove());
+                    profileContentInput.innerHTML = tempDiv.innerHTML; // text only
+                    loadImagesIntoThumbnailArea(images);               // đổ thumb
+                }
+                deleteProfileBtn.style.display = 'block';
+                blockNextBlurSave = true;
+                profileModal.show();
+            }
+        });
+
+        function loadImagesIntoThumbnailArea(imageElements) {
+            const container = document.getElementById('profile-images-container');
+            const thumbnailsArea = document.getElementById('profile-images-thumbnails');
+            
+            if (!container || !thumbnailsArea) return;
+            
+            // Clear existing thumbnails
+            thumbnailsArea.innerHTML = '';
+            
+            if (imageElements.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            // Load each image
+            imageElements.forEach(imgEl => {
+                const fullData = imgEl.getAttribute('data-full') || imgEl.querySelector('img')?.src;
+                if (fullData) {
+                    makeThumb(fullData, 150, 0.9).then(thumbData => {
+                        addImageToThumbnailArea(fullData, thumbData);
+                    });
+                }
+            });
+        }
+
+        // Profile Span: Change color
+        profileSpanMenu.addEventListener('click', (e) => {
+            const colorOption = e.target.closest('.color-option');
+            if (colorOption && currentProfileSpan) {
+                const newColor = colorOption.dataset.color;
+                const profileId = currentProfileSpan.dataset.profileId;
+
+                // Update the span color
+                currentProfileSpan.style.color = newColor;
+
+                // Save color to localStorage
+                if (window.profileColors) {
+                    window.profileColors[profileId] = newColor;
+                    localStorage.setItem('profileColors', JSON.stringify(window.profileColors));
+                }
+
+                hideAllContextMenus();
+                saveNoteChanges(activeNoteId, true);
+            }
+        });
+
+        // Profile Span: Delete
+        document.querySelector('#context-delete-profile').addEventListener('click', async () => {
+            if (currentProfileSpan && await showConfirm('Xóa profile này?')) {
+                // Unwrap the span, replacing it with its own text content
+                const parent = currentProfileSpan.parentNode;
+                while (currentProfileSpan.firstChild) {
+                    parent.insertBefore(currentProfileSpan.firstChild, currentProfileSpan);
+                }
+                parent.removeChild(currentProfileSpan);
+
+                hideAllContextMenus();
+                currentProfileSpan = null;
+                saveNoteChanges(activeNoteId, true);
+            }
+        });
+
+
+        // Title input context menu (như phiên bản cũ)
+        titleInput.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const selection = window.getSelection();
+            // Chỉ hiển thị menu nếu có đoạn text được bôi đen
+            if (selection.toString().length > 0) {
+                // Đây là logic đúng, giống hệt với của ô Nội dung
+                editorContextMenu.style.top = `${e.clientY}px`;
+                editorContextMenu.style.left = `${e.clientX}px`;
+                editorContextMenu.style.display = 'block';
+            }
+        });
+
+        // --- Card Size Modifier (Chế độ xem) ---
+        function applySavedCardSize() {
+            const savedModifier = localStorage.getItem('notesCardSizeModifier') || 'default';
+            container.classList.remove('h-minus-2', 'h-minus-4');
+            if (savedModifier !== 'default') {
+                container.classList.add(savedModifier);
+            }
+
+            // Update checkmarks in menu
+            const tabMenu = document.getElementById('notes-tab-context-menu');
+            if (tabMenu) {
+                const allChecks = tabMenu.querySelectorAll('.submenu .bi-check-circle-fill');
+                allChecks.forEach(check => check.classList.add('d-none'));
+
+                const activeCheck = tabMenu.querySelector(`.submenu [data-size-modifier="${savedModifier}"] i`);
+                if (activeCheck) {
+                    activeCheck.classList.remove('d-none');
+                }
+            }
+        }
+
+        // Event listener for size modifier menu
+        const sizeModifierMenu = document.getElementById('notes-tab-context-menu');
+        if (sizeModifierMenu) {
+            sizeModifierMenu.addEventListener('click', (e) => {
+                const sizeItem = e.target.closest('.submenu .menu-item[data-size-modifier]');
+                if (sizeItem) {
+                    const modifier = sizeItem.dataset.sizeModifier;
+                    localStorage.setItem('notesCardSizeModifier', modifier);
+                    applySavedCardSize();
+                    hideAllContextMenus();
+                }
+            });
+        }
+
+        // Global clicks
+        notesPane.addEventListener('contextmenu', handleTabContextMenu);
+
+        // --- Profile Functions ---
+
+        // Initialize profile colors storage
+        if (typeof (Storage) !== "undefined") {
+            const savedColors = localStorage.getItem('profileColors');
+            if (savedColors) {
+                window.profileColors = JSON.parse(savedColors);
+            } else {
+                window.profileColors = {};
+            }
+        }
+
+        // Apply saved colors on load
+        function applySavedColors() {
+            if (window.profileColors) {
+                Object.keys(window.profileColors).forEach(profileId => {
+                    const color = window.profileColors[profileId];
+                    const spans = document.querySelectorAll(`.has-profile[data-profile-id="${profileId}"]`);
+                    spans.forEach(span => {
+                        span.style.color = color;
+                    });
+                });
+            }
+        }
+
+        // Initialize profile interactions (popovers, click handlers)
+        function initializeProfileInteractions() {
+            const editor = document.getElementById('detail-editable-full');
+            if (!editor) return;
+
+            // First, destroy any existing popovers to prevent duplicates
+            editor.querySelectorAll('.has-profile').forEach(span => {
+                const popoverInstance = bootstrap.Popover.getInstance(span);
+                if (popoverInstance) {
+                    popoverInstance.dispose();
+                }
+            });
+
+        // Add popovers to all profile spans
+        editor.querySelectorAll('.has-profile').forEach(span => {
+            const profileId = span.dataset.profileId || '';
+            const profilePassword = span.dataset.profilePassword || '';
+            const profileContent = span.dataset.profileContent || '';
+
+            // Lấy ảnh đầu tiên trong content (nếu có) để preview 400x400
+            let mediaHTML = '';
+            const imagesJson = span.dataset.profileImages;
+            let src = null;
+
+            if (imagesJson) {
+                try {
+                    const arr = JSON.parse(imagesJson);
+                    if (Array.isArray(arr) && arr.length) src = arr[0]; // ảnh đầu tiên
+                } catch {}
+            }
+
+            if (!src && profileContent) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = profileContent;
+                const firstThumb = tmp.querySelector('.tg-thumb');
+                const firstImg   = firstThumb ? null : tmp.querySelector('img');
+                src = firstThumb
+                    ? (firstThumb.getAttribute('data-full') || firstThumb.querySelector('img')?.src)
+                    : (firstImg ? firstImg.getAttribute('src') : null);
+            }
+
+            if (src) {
+                mediaHTML = `
+                    <div class="preview-container" style="width:400px;height:400px;overflow:hidden;display:flex;align-items:center;justify-content:center;box-sizing:border-box">
+                        <img
+                            src="${src}"
+                            alt="preview"
+                            width="400" height="400"
+                            style="display:block;width:100%;height:100%;object-fit:contain"
+                        />
+                    </div>`;
+            }
+
+            const popoverContent = `
+                <div class="profile-popover-content">
+                    ${profileId ? `<div><strong>ID:</strong> ${profileId}</div>` : ''}
+                    ${profilePassword ? `<div><strong>Password:</strong> ${profilePassword}</div>` : ''}
+                    ${profileContent ? `<div style="margin-top:8px;max-width:400px;word-wrap:break-word;">${profileContent}</div>` : ''}
+                    ${mediaHTML}
+                </div>
+            `;
+
+            // Gỡ popover cũ
+            const old = bootstrap.Popover.getInstance(span);
+            if (old) old.dispose();
+
+            const pop = new bootstrap.Popover(span, {
+                content: popoverContent,
+                html: true,
+                trigger: 'hover',
+                placement: 'bottom',
+                container: 'body',
+                customClass: 'profile-popover-500',
+                template: '<div class="popover profile-popover-500" role="tooltip"><div class="popover-arrow"></div><div class="popover-body p-2"></div></div>',
+                boundary: 'viewport',
+                fallbackPlacements: ['bottom','top','left','right'],
+                offset: [0,8],
+                delay: { show: 60, hide: 120 }
+            });
+
+            span.addEventListener('shown.bs.popover', () => {
+                const root = document.querySelector('.popover.profile-popover-500:last-of-type');
+                const img  = root?.querySelector('.preview-container > img');
+
+                // Siết lại lần nữa để thắng mọi CSS lạ
+                root.style.width = '448px'; root.style.maxWidth = '448px';
+                if (img) {
+                    img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain';
+                    // BẮT BUỘC cập nhật popper khi ảnh đã load xong
+                    const upd = () => { pop._popper && pop._popper.update && pop._popper.update(); };
+                    img.complete ? upd() : img.addEventListener('load', upd, { once: true });
+                }
+            });
+        });
+        }
+
+        // Initialize auto-detected elements interactions
+        function initializeAutoDetectedElements() {
+            console.log('[initializeAutoDetectedElements] 🔧 Initializing auto-detected element handlers');
+            const editor = document.getElementById('detail-editable-full');
+            if (!editor) {
+                console.log('[initializeAutoDetectedElements] ⚠️ Editor not found');
+                return;
+            }
+
+            // 1. Handle auto-command clicks: auto-copy with smart logic
+            // /command -> copy "command" (without /)
+            // //command -> copy "/command" (with one /)
+            const commandSpans = editor.querySelectorAll('.auto-command');
+            console.log(`[initializeAutoDetectedElements] 📝 Found ${commandSpans.length} command spans`);
+            
+            commandSpans.forEach(span => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const fullCommand = span.dataset.command;
+                    const copyText = span.dataset.copy;
+                    console.log('[auto-command click] 📋 Full command:', fullCommand, '| Copy text:', copyText);
+                    
+                    navigator.clipboard.writeText(copyText).then(() => {
+                        console.log('[auto-command click] ✅ Command copied successfully');
+                        showToast(`Đã copy: ${copyText}`, 'success');
+                    }).catch(err => {
+                        console.error('[auto-command click] ❌ Copy failed:', err);
+                        showToast('Lỗi khi copy command', 'error');
+                    });
+                });
+
+                span.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const command = span.dataset.command;
+                    const copyText = span.dataset.copy;
+                    console.log('[auto-command contextmenu] 🖱️ Right-clicked command:', command);
+                    showAutoCommandContextMenu(e.clientX, e.clientY, copyText);
+                });
+            });
+
+            // 2. Handle auto-quoted clicks: auto-copy quoted text
+            const quotedSpans = editor.querySelectorAll('.auto-quoted');
+            console.log(`[initializeAutoDetectedElements] 💬 Found ${quotedSpans.length} quoted spans`);
+            
+            quotedSpans.forEach(span => {
+                span.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const quoted = span.dataset.quoted;
+                    console.log('[auto-quoted click] 📋 Copying quoted text:', quoted);
+                    
+                    navigator.clipboard.writeText(quoted).then(() => {
+                        console.log('[auto-quoted click] ✅ Quoted text copied successfully');
+                        showToast(`Đã copy: ${quoted}`, 'success');
+                    }).catch(err => {
+                        console.error('[auto-quoted click] ❌ Copy failed:', err);
+                        showToast('Lỗi khi copy quoted text', 'error');
+                    });
+                });
+
+                span.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const quoted = span.dataset.quoted;
+                    console.log('[auto-quoted contextmenu] 🖱️ Right-clicked quoted:', quoted);
+                    showAutoQuotedContextMenu(e.clientX, e.clientY, quoted);
+                });
+            });
+
+            console.log('[initializeAutoDetectedElements] ✅ All handlers initialized');
+        }
+
+        // Context menu for /command
+        function showAutoCommandContextMenu(x, y, copyText) {
+            console.log('[showAutoCommandContextMenu] 🖱️ Showing context menu for:', copyText);
+            hideAllContextMenus();
+            
+            const menu = document.createElement('div');
+            menu.className = 'context-menu show';
+            menu.style.position = 'fixed';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.zIndex = '10000';
+            
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="navigator.clipboard.writeText('${copyText}').then(() => showToast('Đã copy: ${copyText}', 'success'))">
+                    <i class="bi bi-clipboard"></i> Copy Command
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => menu.remove(), { once: true });
+            }, 0);
+        }
+
+        // Context menu for 'quoted
+        function showAutoQuotedContextMenu(x, y, quoted) {
+            hideAllContextMenus();
+            
+            const menu = document.createElement('div');
+            menu.className = 'context-menu show';
+            menu.style.position = 'fixed';
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.zIndex = '10000';
+            
+            menu.innerHTML = `
+                <div class="context-menu-item" onclick="navigator.clipboard.writeText('${quoted}').then(() => showToast('Đã copy: ${quoted}', 'success'))">
+                    <i class="bi bi-clipboard"></i> Copy text
+                </div>
+            `;
+            
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => menu.remove(), { once: true });
+            }, 0);
+        }
+
+        // ===== CONTEXT MENU CHUỘT PHẢI TRÊN CARD GHI CHÚ =====
+        (function setupNoteCardContextMenu() {
+            const notesRoot = document.querySelector("#notes-container"); // nơi chứa danh sách card
+            const cardMenuEl = document.getElementById("note-card-context-menu");
+
+            if (!notesRoot || !cardMenuEl) {
+                console.warn("Context menu Ghi Chú: thiếu phần tử cần thiết (notesRoot/cardMenuEl)");
+                return;
+            }
+
+            // Chuột phải vào card
+            notesRoot.addEventListener("contextmenu", function (ev) {
+                // tìm card gần nhất
+                const noteCardEl = ev.target.closest(".card[data-note-id]");
+                if (!noteCardEl) {
+                    // click phải vùng trống -> ẩn menu
+                    hideAllContextMenus();
+                    return;
+                }
+
+                ev.preventDefault();
+                ev.stopPropagation();
+                hideAllContextMenus();
+
+                // Lấy ID ghi chú
+                const noteId = noteCardEl.getAttribute("data-note-id") || noteCardEl.id || "";
+                cardMenuEl.dataset.noteId = noteId;
+
+                // Cập nhật text "Đánh dấu / Bỏ đánh dấu" dựa trên trạng thái hiện tại
+                const noteObj = window.notesData.find(n => String(n.id) === String(noteId));
+                const markBtn = cardMenuEl.querySelector('[data-action="mark"]');
+                if (noteObj && markBtn) {
+                    markBtn.innerHTML = noteObj.is_marked
+                        ? '<i class="bi bi-star-fill me-2"></i> Bỏ Đánh Dấu'
+                        : '<i class="bi bi-star-fill me-2"></i> Đánh Dấu';
+                }
+
+                // Hiển thị menu với định vị thông minh kiểu MXH
+                showSmartMenu(cardMenuEl, ev.clientX, ev.clientY);
+            });
+
+            // Ngăn chuột phải vào chính menu gây menu hệ thống
+            cardMenuEl.addEventListener("contextmenu", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+            });
+
+            // Click vào item trong menu card
+            cardMenuEl.addEventListener("click", async function (ev) {
+                const item = ev.target.closest(".menu-item[data-action]");
+                if (!item) return;
+
+                const action = item.getAttribute("data-action"); // open / mark / duplicate / copy-id / delete
+                const noteId = cardMenuEl.dataset.noteId;
+                hideAllContextMenus();
+
+                // Xử lý action trực tiếp thay vì dùng hàm handleNoteMenuAction
+                switch (action) {
+                    case 'mark':
+                        // Đánh dấu/bỏ đánh dấu
+                        if (noteId) {
+                            try {
+                                const response = await fetch(`{{ url_for('notes_feature.api_toggle_mark', note_id='') }}${noteId}`, { method: 'POST' });
+                                if (!response.ok) throw new Error('Server error when marking');
+                                
+                                const data = await response.json();
+                                if (data.success) {
+                                    await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                                    showToast('Đã cập nhật đánh dấu!', 'success');
+                                }
+                            } catch (error) {
+                                console.error('Error toggling mark:', error);
+                                showToast('Lỗi khi cập nhật đánh dấu. Vui lòng thử lại.', 'error');
+                            }
+                        }
+                        break;
+                        
+                    case 'copy-id':
+                        // Copy ID ghi chú
+                        if (noteId) {
+                            navigator.clipboard.writeText(noteId).then(() => {
+                                showToast('Đã copy ID ghi chú!', 'success');
+                            }).catch(err => {
+                                console.error('Failed to copy ID:', err);
+                                showToast('Lỗi khi copy ID.', 'error');
+                            });
+                        }
+                        break;
+                        
+                    case 'delete':
+                        // Xóa ghi chú với confirm
+                        if (noteId) {
+                            if (confirm('Bạn có chắc chắn muốn xóa ghi chú này?')) {
+                                try {
+                                    const response = await fetch(`{{ url_for('notes_feature.api_delete_note', note_id='') }}${noteId}`, { method: 'DELETE' });
+                                    if (!response.ok) throw new Error('Server error when deleting');
+                                    
+                                    const data = await response.json();
+                                    if (data.success) {
+                                        await fetchAndRenderNotes(searchInput.value.toLowerCase().trim());
+                                        showToast('Đã xóa ghi chú!', 'success');
+                                    }
+                                } catch (error) {
+                                    console.error('Error deleting note:', error);
+                                    showToast('Lỗi khi xóa ghi chú. Vui lòng thử lại.', 'error');
+                                }
+                            }
+                        }
+                        break;
+                }
+            });
+        })();
+
+        // --- Initial Setup ---
+        async function initializeNotesView() {
+            // Requirement 1: Set default to list view (như phiên bản cũ)
+            container.classList.add('notes-list-view');
+            container.classList.remove('notes-grid-view');
+
+            // Close detail panel if it's open, ensuring a clean list view
+            if (detailWrapper.classList.contains('visible')) {
+                window.closeDetailPanel();
+            }
+
+            // Await fetching and rendering to ensure data and elements are ready
+            await fetchAndRenderNotes();
+
+            // Apply card size settings
+            applySavedCardSize();
+
+            // Animate the cards after they have been rendered
+            setTimeout(() => {
+                const cards = container.querySelectorAll('.card');
+                cards.forEach(card => {
+                    card.classList.add('note-card-enter-active');
+                    setTimeout(() => card.classList.remove('note-card-enter-active'), 400);
+                });
+            }, 50);
+
+            // NEW LOGIC: Automatically select and show the first note (như phiên bản cũ)
+            if (window.filteredNotes && window.filteredNotes.length > 0) {
+                const firstNote = window.filteredNotes[0];
+
+                // Open the detail panel layout
+                openDetailPanel();
+
+                // Populate the panel with the first note's details
+                showNoteDetail(firstNote);
+            }
+        }
+
+        initializeNotesView();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "layouts/base.html" %}
+
+{% block styles %}
+<style>
+    /* Layout demo nhỏ, không phụ thuộc CSS cũ */
+    .notes-zero {
+        padding: 16px;
+    }
+
+    .row-gap {
+    display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+
+    /* Nút test */
+    .btn-test {
+        white-space: nowrap;
+    }
+
+    /* === Hard lock preview box 300x300, chống mọi rule ngoài === */
+    #preview.preview-box{
+      width:300px !important;
+      height:300px !important;
+      flex:0 0 auto !important;
+      display:flex !important;
+      align-items:center !important; 
+      justify-content:center !important;
+      position:relative !important; 
+      overflow:hidden !important;
+      border:5px solid #ff0000 !important; 
+      border-radius:12px !important;
+      background:#0f1115 !important;
+      box-sizing:border-box !important;
+      min-width:300px !important;
+      max-width:300px !important;
+      min-height:300px !important;
+      max-height:300px !important;
+      outline:2px solid #ff00ff !important;
+      z-index:999 !important;
+    }
+
+    /* Vô hiệu hóa mọi img {width:100%} ở theme */
+    #preview.preview-box > img{
+      position:static !important;
+      display:block !important;
+      width:100% !important;
+      height:100% !important;
+      object-fit:cover !important;
+      border-radius:8px;
+    }
+
+    /* Đừng để layout cha kéo giãn khung */
+    .notes-zero .row-gap{ display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+    .notes-zero .row-gap > *{ flex:0 0 auto !important; }  /* không cho tự giãn */
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tab-pane fade show active" id="notes-tool-pane" role="tabpanel">
+    <div class="notes-zero">
+        <div class="row-gap">
+            <button id="btn-test-preview" class="btn btn-primary btn-test">
+                <i class="bi bi-image"></i> Test Preview
+                            </button>
+
+            <div id="preview" class="preview-box" style="width:300px !important; height:300px !important; border:5px solid #ff0000 !important; background:#0f1115 !important; display:flex !important; align-items:center !important; justify-content:center !important; box-sizing:border-box !important;">
+                <!-- Ảnh mẫu sẽ được gán vào đây -->
+                <span class="text-muted">Chưa có ảnh</span>
+            </div>
+            </div>
+        <div class="mt-3 text-muted" style="font-size:12px">
+            Khung cố định 300×300. Ảnh luôn fit vào khung (object-fit: cover), không tràn mép, không nở chiều cao.<br>
+            <strong>Hướng dẫn:</strong> Di chuyển chuột vào nút "Test Preview" để xem preview tự động.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('btn-test-preview');
+        const box = document.getElementById('preview');
+
+        // Ảnh mẫu tự tạo (SVG -> data URL), không cần internet
+        function makeSampleImageDataURL() {
+            const svg = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='1560' height='1040'>
+          <rect width='100%' height='100%' fill='#ffffff'/>
+          <g font-family='Inter,Segoe UI,Arial' fill='#000'>
+            <text x='50%' y='48%' font-size='64' dominant-baseline='middle' text-anchor='middle' opacity='0.9'>
+              SAMPLE PREVIEW
+            </text>
+            <text x='50%' y='58%' font-size='28' dominant-baseline='middle' text-anchor='middle' opacity='0.75'>
+              1560×1040 → fit vào khung 200×200 (object-fit: contain)
+            </text>
+          </g>
+        </svg>`;
+            return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        function showPreview(imgSrc) {
+            const box = document.getElementById('preview');
+            // KHÓA khung bằng inline style (độ ưu tiên cao hơn class bên ngoài)
+            box.style.width = '300px';
+            box.style.height = '300px';
+            box.style.border = '5px solid #ff0000';
+            box.style.background = '#0f1115';
+            box.style.display = 'flex';
+            box.style.alignItems = 'center';
+            box.style.justifyContent = 'center';
+            box.style.boxSizing = 'border-box';
+
+            box.innerHTML = '';
+            const img = new Image();
+            img.alt = 'sample-preview';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.onload = () => box.appendChild(img);
+            img.src = imgSrc;
+        }
+
+        btn.addEventListener('mouseenter', () => {
+            const dataUrl = makeSampleImageDataURL();
+            showPreview(dataUrl);
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            const box = document.getElementById('preview');
+            box.innerHTML = '<span class="text-muted">Chưa có ảnh</span>';
+        });
+});
+</script>
+{% endblock %}

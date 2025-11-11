@@ -1,1 +1,8 @@
 # Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+Dashboard/node_modules/
+Dashboard/__pycache__/
+Dashboard/app/__pycache__/
+Dashboard/data/uploaded_sessions/
+Android_Tool/modules/ModAndroid/bin/
+Android_Tool/logs/
+AHK_Tool/__pycache__/
