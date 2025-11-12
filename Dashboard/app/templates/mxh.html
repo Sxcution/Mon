@@ -12,7 +12,9 @@
 
         <!-- Action buttons on the right -->
         <div class="d-flex gap-2 align-items-center flex-wrap">
-            
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mxh-chat-tool-modal">
+                <i class="bi bi-chat-dots me-1"></i> Chat
+            </button>
             <div class="btn-group">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="mxh-filter-btn" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-funnel me-1"></i> Lọc
@@ -183,6 +185,13 @@
                             placeholder="Nhập số điện thoại..." maxlength="13" style="width: 100%;">
                     </div>
                 </div>
+                <div class="row" style="margin-bottom: 1px;">
+                    <div style="width: 100%; display: inline-block;">
+                        <label class="form-label mb-1">Email</label>
+                        <input type="email" class="form-control form-control-sm" id="wechat-email"
+                            placeholder="Nhập email..." style="width: 100%;">
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger btn-sm" id="wechat-reset-btn">Reset</button>
@@ -347,6 +356,83 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirm-reset-btn">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Tool Clear Words Confirmation Modal -->
+<div class="modal fade" id="chat-clear-words-confirm-modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Xác Nhận Xóa Tất Cả Từ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa tất cả từ trong danh sách không?</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả từ sẽ bị xóa vĩnh viễn.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy Bỏ</button>
+                <button type="button" class="btn btn-danger" id="confirm-clear-words-btn">Xác Nhận Xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Tool Modal -->
+<div class="modal fade" id="mxh-chat-tool-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-chat-dots me-2"></i>Chat Tool - Random Từ Ngữ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Bên trái: Quản lý từ -->
+                    <div class="col-md-6">
+                        <h6 class="mb-2"><i class="bi bi-list-ul me-1"></i>Danh Sách Từ</h6>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control form-control-sm" id="chat-word-input" 
+                                   placeholder="Nhập từ (ví dụ: hello, hi, love...)">
+                            <button class="btn btn-sm btn-primary" id="chat-add-word-btn">
+                                <i class="bi bi-plus-lg"></i> Thêm
+                            </button>
+                        </div>
+                        <div id="chat-words-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #444; border-radius: 4px; padding: 8px;">
+                            <!-- Words will be rendered here as badges -->
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-danger w-100" id="chat-clear-words-btn" title="Xóa tất cả từ">
+                                <i class="bi bi-trash me-1"></i> Xóa Tất Cả Từ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bên phải: Kết quả & Random -->
+                    <div class="col-md-6">
+                        <h6 class="mb-2"><i class="bi bi-clipboard-check me-1"></i>Kết Quả</h6>
+                        <div class="alert alert-info" style="font-size: 1.1rem; font-weight: 500; cursor: pointer;" id="chat-result-box" onclick="copyToClipboard(this.textContent.trim())">
+                            <i class="bi bi-chat-square-text me-2"></i>
+                            <span id="chat-result-text">Nhấn Random để tạo câu...</span>
+                        </div>
+                        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Click vào kết quả để copy</small>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-success w-100" id="chat-random-btn-right">
+                                <i class="bi bi-shuffle me-1"></i> Random (1-5 từ)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -970,64 +1056,99 @@
     }
 
     // Get card badge for individual cards (positioned like group badge)
-    function getCardBadge(account) {
+    // 🔍 Updated to accept allAccounts to check all accounts in the card
+    function getCardBadge(account, allAccounts = []) {
         const now = new Date();
         let badgeInfo = {
             total: 0,
             noticeExpired: 0,
-            needHongKong: 0
+            noticeExpiredAccounts: [], // 🔍 Track which accounts have expired notices
+            needHongKong: 0,
+            needHongKongAccounts: [] // 🔍 Track which accounts need HK number
         };
 
-        // 🟠 Cam: Check if notice countdown finished (causes blink)
-        if (account.notice) {
-            const noticeObj = ensureNoticeParsed(account.notice);
-            if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
-                const startDate = new Date(noticeObj.start_at);
-                const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
-                if (now >= endDate) {
-                    badgeInfo.noticeExpired++;
-                    badgeInfo.total++;
-                }
-            }
-        }
+        // Get all accounts of this card
+        const cardAccounts = allAccounts.length > 0 ? allAccounts : [account];
 
-        // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
-        if (account.platform === 'wechat' && account.wechat_created_year) {
-            const createdDate = new Date(account.wechat_created_year, account.wechat_created_month - 1, account.wechat_created_day);
-            const totalHours = calculateTimeDifferenceInHours(createdDate, now);
-            const totalDays = Math.floor(totalHours / 24);
-            
-            if (totalDays >= 365) {
-                // Check if Hong Kong number
-                const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
-                const isHongKongNumber = primaryPhone.startsWith('852');
-                if (!isHongKongNumber) {
-                    badgeInfo.needHongKong++;
-                    badgeInfo.total++;
+        // Check all accounts in the card
+        cardAccounts.forEach((acc, idx) => {
+            // 🟠 Cam: Check if notice countdown finished (causes blink)
+            if (acc.notice) {
+                const noticeObj = ensureNoticeParsed(acc.notice);
+                if (noticeObj && noticeObj.enabled && noticeObj.start_at && noticeObj.days) {
+                    const startDate = new Date(noticeObj.start_at);
+                    const endDate = new Date(startDate.getTime() + noticeObj.days * 24 * 60 * 60 * 1000);
+                    if (now >= endDate) {
+                        badgeInfo.noticeExpired++;
+                        badgeInfo.total++;
+                        badgeInfo.noticeExpiredAccounts.push({
+                            index: idx + 1,
+                            username: acc.username || 'Không tên',
+                            isPrimary: acc.is_primary
+                        });
+                    }
                 }
             }
-        }
+
+            // ⚪ Trắng: Check if account is 1 year old but still NOT Hong Kong number (IMPROVED with precise time calculation)
+            if (acc.platform === 'wechat' && acc.wechat_created_year) {
+                const createdDate = new Date(
+                    acc.wechat_created_year, 
+                    (acc.wechat_created_month || 1) - 1, 
+                    acc.wechat_created_day || 1
+                );
+                const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+                const totalDays = Math.floor(totalHours / 24);
+                
+                if (totalDays >= 365) {
+                    // Check if Hong Kong number
+                    const phone = (acc.phone || '').replace(/[\s+]/g, '');
+                    const isHongKongNumber = phone.startsWith('852');
+                    if (!isHongKongNumber) {
+                        badgeInfo.needHongKong++;
+                        badgeInfo.total++;
+                        badgeInfo.needHongKongAccounts.push({
+                            index: idx + 1,
+                            username: acc.username || 'Không tên',
+                            isPrimary: acc.is_primary
+                        });
+                    }
+                }
+            }
+        });
 
         // Return badge HTML if there are issues
         let badges = '';
 
         // Badge ĐẾN HẠN (đỏ) - ưu tiên cao nhất
         if (badgeInfo.noticeExpired > 0) {
+            // 🔍 Build detailed message for notice
+            const accountsList = badgeInfo.noticeExpiredAccounts.map(a => 
+                `Tài khoản thứ ${a.index}`
+            ).join(', ');
+            
             let noticeCache = '';
             if (account.notice) {
                 try {
                     const noticeObj = ensureNoticeParsed(account.notice);
                     if (noticeObj && noticeObj.enabled) {
+                        // 🔍 Calculate start date and due date
+                        const startDate = noticeObj.start_at ? new Date(noticeObj.start_at) : null;
+                        const dueDate = noticeObj.due_date ? new Date(noticeObj.due_date) : null;
+                        
                         noticeCache = JSON.stringify({
                             title: noticeObj.title || 'Thông báo đến hạn',
-                            message: noticeObj.note || 'Không có nội dung',
-                            due_human: noticeObj.due_date ? new Date(noticeObj.due_date).toLocaleDateString('vi-VN') : '',
+                            message: accountsList + ' đã đến hạn',
+                            due_human: dueDate ? dueDate.toLocaleDateString('vi-VN') : '',
+                            start_human: startDate ? startDate.toLocaleDateString('vi-VN') : '',
                             due_at: noticeObj.due_date,
-                            notice_id: account.id
+                            start_at: noticeObj.start_at,
+                            notice_id: account.id,
+                            accounts: badgeInfo.noticeExpiredAccounts
                         });
                     }
                 } catch (e) {
-                    console.error('Error parsing notice cache:', e);
+                    console.error('🔍 Error parsing notice cache:', e);
                 }
             }
 
@@ -1043,9 +1164,21 @@
 
         // Badge ĐỦ 1 NĂM (trắng) - chỉ hiển thị nếu không có badge đỏ
         if (badgeInfo.needHongKong > 0 && badgeInfo.noticeExpired === 0) {
+            // 🔍 Build detailed message for 1-year anniversary
+            const accountsList = badgeInfo.needHongKongAccounts.map(a => 
+                `Tài khoản thứ ${a.index}`
+            ).join(', ');
+            
+            const anniversaryCache = JSON.stringify({
+                title: 'Đủ tuổi 1 năm',
+                message: accountsList + ' đã đủ 1 năm tuổi',
+                accounts: badgeInfo.needHongKongAccounts
+            });
+
             badges += `<span class="group-badge card-top-badge notice-badge" 
                             data-badge-type="anniversary"
                             data-account-id="${account.id}"
+                            data-anniversary-cache='${anniversaryCache}'
                             title="Tài khoản đủ tuổi 1 năm"
                             style="background:#fff; color:#111; border:2px solid rgba(0,0,0,.15); box-shadow: 0 0 8px rgba(255,255,255,0.3);">
                         1Y
@@ -1196,7 +1329,11 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
             // Check secondary account for WeChat (only if blinks) (IMPROVED with precise time calculation)
             if (account.platform === 'wechat' && account.secondary_wechat_created_year) {
-                const secCreatedDate = new Date(account.secondary_wechat_created_year, account.secondary_wechat_created_month - 1, account.secondary_wechat_created_day);
+                const secCreatedDate = new Date(
+                    account.secondary_wechat_created_year, 
+                    (account.secondary_wechat_created_month || 1) - 1, 
+                    account.secondary_wechat_created_day || 1
+                );
                 const secTotalHours = calculateTimeDifferenceInHours(secCreatedDate, now);
                 const secTotalDays = Math.floor(secTotalHours / 24);
                 
@@ -1418,6 +1555,33 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             const minAgeHours = 90 * 24; // 90 ngày
             return totalHours >= minAgeHours; // True nếu đã đủ 90 ngày
         }
+    }
+
+    // 🔍 Check if WeChat account is 1 year old but doesn't have Hong Kong number
+    function needsHongKongNumber(account) {
+        if (!account || account.platform !== 'wechat') return false;
+        
+        // Check if account is 1 year old
+        if (!account.wechat_created_year) return false;
+        
+        const now = new Date();
+        const createdDate = new Date(
+            account.wechat_created_year,
+            (account.wechat_created_month || 1) - 1,
+            account.wechat_created_day || 1
+        );
+        const totalHours = calculateTimeDifferenceInHours(createdDate, now);
+        const totalDays = Math.floor(totalHours / 24);
+        
+        // If account is not 1 year old yet, return false
+        if (totalDays < 365) return false;
+        
+        // Check if phone number is Hong Kong (+852)
+        const primaryPhone = (account.phone || '').replace(/[\s+]/g, '');
+        const isHongKongNumber = primaryPhone.startsWith('852');
+        
+        // Return true if account is 1 year old but doesn't have HK number
+        return !isHongKongNumber;
     }
 
     // ===== CARD FACE RENDERING =====
@@ -1793,7 +1957,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 const cardHTML = `
                     <div class="col" style="padding: 2px;" data-card-id="${cardId}">
                         <div class="mxh-card-wrapper ${state.isFlipped ? 'flipped' : ''}" id="card-wrapper-${cardId}" style="position: relative;">
-                            ${getCardBadge(activeAccount)}
+                            ${getCardBadge(activeAccount, accounts)}
                             <div class="mxh-card-inner">
                                 ${renderCardFace(activeAccount, accounts, 'front')}
                             </div>
@@ -1947,9 +2111,35 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             // 🔍 Check if this account can scan WeChat (green QR icon)
             const canScan = platform === 'wechat' && canScanWeChat(acc);
             const qrIcon = canScan ? '<i class="bi bi-qr-code" style="color: #07c160; margin-left: 4px;"></i>' : '';
+            // 🔍 Check if account needs Hong Kong number (white dot indicator)
+            const needsHK = platform === 'wechat' && needsHongKongNumber(acc);
+            const hkDot = needsHK ? '<span style="display: inline-block; width: 6px; height: 6px; background-color: #ffffff; border-radius: 50%; margin-left: 4px;"></span>' : '';
+            
+            // 🔍 Check if account has notice (bell icon: yellow = active, red = expired)
+            let bellIcon = '';
+            if (acc.notice) {
+                try {
+                    const accNoticeObj = ensureNoticeParsed(acc.notice);
+                    if (accNoticeObj && accNoticeObj.enabled && accNoticeObj.start_at && accNoticeObj.days) {
+                        const now = new Date();
+                        const startDate = new Date(accNoticeObj.start_at);
+                        const endDate = new Date(startDate.getTime() + accNoticeObj.days * 24 * 60 * 60 * 1000);
+                        if (now >= endDate) {
+                            // Expired - red bell
+                            bellIcon = '<i class="bi bi-bell-fill" style="color: #dc3545; margin-left: 4px;"></i>';
+                        } else {
+                            // Active - yellow bell
+                            bellIcon = '<i class="bi bi-bell-fill" style="color: #ffc107; margin-left: 4px;"></i>';
+                        }
+                    }
+                } catch (e) {
+                    console.error('🔍 Error checking notice for account submenu:', e);
+                }
+            }
+            
             return `
                             <div class="mxh-menu-item" data-action="switch-account" data-account-id="${acc.id}">
-                                ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}${qrIcon}
+                                ${isActive ? '✓ ' : ''}${idx + 1}. ${acc.username || '...'} ${isPrimary ? '👑' : ''}${qrIcon}${hkDot}${bellIcon}
                             </div>
                         `;
         }).join('')}
@@ -2209,18 +2399,44 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     // === NEW: Create Sub-Account ===
     async function createSubAccount(cardId) {
         try {
+            // 🔍 Get current date for new sub-account
+            const today = new Date();
+            const currentDay = today.getDate();
+            const currentMonth = today.getMonth() + 1; // JavaScript months are 0-indexed
+            const currentYear = today.getFullYear();
+
+            console.log('🔍 Creating sub-account with date:', { day: currentDay, month: currentMonth, year: currentYear });
+
             const response = await fetch(`/mxh/api/cards/${cardId}/accounts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
+                body: JSON.stringify({
+                    wechat_created_day: currentDay,
+                    wechat_created_month: currentMonth,
+                    wechat_created_year: currentYear
+                })
             });
 
             if (response.ok) {
                 const newAccount = await response.json();
-                mxhAccounts.push(newAccount);
-
-                // Flip to new account
-                flipCardToAccount(cardId, newAccount.id);
+                console.log('🔍 New account created:', newAccount);
+                console.log('🔍 New account full data:', JSON.stringify(newAccount, null, 2));
+                
+                // 🔍 Reload all data to ensure consistency and get full card info
+                await loadMXHData(true);
+                
+                console.log('🔍 Data reloaded, mxhAccounts count:', mxhAccounts.length);
+                
+                // Wait a bit more for render to complete, then flip to new account
+                setTimeout(() => {
+                    console.log('🔍 Attempting to flip to account:', newAccount.id);
+                    const accountExists = mxhAccounts.find(a => a.id === newAccount.id);
+                    console.log('🔍 Account exists in mxhAccounts:', !!accountExists);
+                    if (accountExists) {
+                        console.log('🔍 Account data:', accountExists);
+                    }
+                    flipCardToAccount(cardId, newAccount.id);
+                }, 300);
 
                 if (typeof showToast === 'function') {
                     showToast('Đã tạo tài khoản phụ!', 'success');
@@ -2229,7 +2445,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 throw new Error('Failed to create sub-account');
             }
         } catch (error) {
-            console.error('Error creating sub-account:', error);
+            console.error('🔍 Error creating sub-account:', error);
             if (typeof showToast === 'function') {
                 showToast('Lỗi tạo tài khoản phụ!', 'error');
             }
@@ -2780,12 +2996,15 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             card_name: document.getElementById('wechat-card-name').value,
             username: document.getElementById('wechat-username').value,
             phone: document.getElementById('wechat-phone').value,
+            email: document.getElementById('wechat-email').value,
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
             status: selectedStatus,  // Keep the status as-is: 'active', 'disabled', or 'die'
             wechat_status: selectedStatus
         };
+
+        console.log('🔍 WeChat Apply - Data to save:', data);
 
         // Find account and preserve card_id
         const accountIndex = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
@@ -2810,14 +3029,20 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         scheduleRender();
 
         try {
+            console.log('🔍 Sending PUT request to:', `/mxh/api/accounts/${currentContextAccountId}`);
             const response = await fetch(`/mxh/api/accounts/${currentContextAccountId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
+            console.log('🔍 Response status:', response.status);
+            
             if (response.ok) {
                 const updatedAccount = await response.json();
+                console.log('🔍 Updated account from server:', updatedAccount);
+                console.log('🔍 Email from server:', updatedAccount.email);
+                console.log('🔍 Full JSON:', JSON.stringify(updatedAccount, null, 2));
                 // Merge the server response back into local data
                 const idx = mxhAccounts.findIndex(acc => acc.id === currentContextAccountId);
                 if (idx !== -1) {
@@ -2829,12 +3054,19 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 }
                 showToast('✅ Đã cập nhật!', 'success');
             } else {
-                const error = await response.json();
-                showToast(error.error || 'Lỗi!', 'error');
+                const errorText = await response.text();
+                console.error('🔍 Error response:', errorText);
+                try {
+                    const error = JSON.parse(errorText);
+                    showToast(error.error || 'Lỗi!', 'error');
+                } catch {
+                    showToast('Lỗi: ' + errorText, 'error');
+                }
                 await loadMXHData(false);
             }
         } catch (error) {
-            showToast('Lỗi kết nối!', 'error');
+            console.error('🔍 Fetch error:', error);
+            showToast('Lỗi kết nối: ' + error.message, 'error');
             await loadMXHData(false);
         }
     });
@@ -3198,9 +3430,17 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         const account = mxhAccounts.find(acc => acc.id === accountId);
         if (!account) {
+            console.error('🔍 Account not found:', accountId);
             _openWeChatModalLock = false;
             return;
         }
+
+        console.log('🔍 Opening WeChat modal for account:', account);
+        console.log('🔍 Date info:', {
+            day: account.wechat_created_day,
+            month: account.wechat_created_month,
+            year: account.wechat_created_year
+        });
 
         currentContextAccountId = accountId;
 
@@ -3210,11 +3450,22 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         document.getElementById('wechat-card-name').value = account.card_name || '';
         document.getElementById('wechat-username').value = account.username || '';
         document.getElementById('wechat-phone').value = account.phone || '';
+        document.getElementById('wechat-email').value = account.email || '';
 
-        // Format date for display
-        const day = account.wechat_created_day || 1;
-        const month = account.wechat_created_month || 1;
-        const year = account.wechat_created_year || 2024;
+        // 🔍 Format date for display - use current date if not set
+        let day = account.wechat_created_day;
+        let month = account.wechat_created_month;
+        let year = account.wechat_created_year;
+        
+        // If date is not set, use current date
+        if (!day || !month || !year) {
+            const today = new Date();
+            day = day || today.getDate();
+            month = month || (today.getMonth() + 1);
+            year = year || today.getFullYear();
+            console.log('🔍 Date not set, using current date:', { day, month, year });
+        }
+        
         document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
 
         const primaryStatus = account.status || 'active';
@@ -3611,21 +3862,22 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     const wechatAccountModal = document.getElementById('wechat-account-modal');
     if (wechatAccountModal) {
         wechatAccountModal.addEventListener('shown.bs.modal', function () {
-            // Only auto-fill if it's a new account (all fields empty)
-            const cardName = document.getElementById('wechat-card-name').value;
-            const username = document.getElementById('wechat-username').value;
-
-            // If both are empty, it's likely a new account
-            if (!cardName && !username) {
+            // 🔍 Auto-fill date if it's empty or default (01/01/2024)
+            const dateInput = document.getElementById('wechat-date');
+            const currentDate = dateInput.value;
+            
+            console.log('🔍 Modal opened, current date value:', currentDate);
+            
+            // If date is empty or is the old default (01/01/2024), set to current date
+            if (!currentDate || currentDate === '01/01/2024') {
                 const today = new Date();
                 const day = today.getDate();
                 const month = today.getMonth() + 1;
                 const year = today.getFullYear();
 
-                // Auto-fill date input only if it's empty
-                if (!document.getElementById('wechat-date').value) {
-                    document.getElementById('wechat-date').value = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                }
+                const formattedDate = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                console.log('🔍 Setting date to:', formattedDate);
+                dateInput.value = formattedDate;
             }
         });
     }
@@ -3806,21 +4058,47 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             const box = document.createElement('div');
             box.className = 'notice-preview' + (mode === 'action' ? ' action' : '');
 
-            const title = data?.title || (badgeType === 'anniversary' ? 'Đủ tuổi 1 năm' : 'Thông báo đến hạn');
-            const meta = data?.due_human ? `Đến hạn: ${data.due_human}` :
-                (data?.due_at ? `Đến hạn: ${new Date(data.due_at).toLocaleString()}` :
-                    (badgeType === 'anniversary' ? 'Mốc tuổi tài khoản: 1 năm' : ''));
-            const msg = data?.message || (badgeType === 'anniversary' ? 'Tài khoản đã đủ tuổi 1 năm' : '(Không có nội dung)');
+            // 🔍 For anniversary, only show the message (simplified)
+            if (badgeType === 'anniversary') {
+                const msg = data?.message || 'Tài khoản đã đủ tuổi 1 năm';
+                box.innerHTML = `
+                    <div class="content" style="margin-top: 0;">${escapeHtml(msg)}</div>
+                    <div class="actions">
+                        <button type="button" class="btn btn-off">Tắt Thông Báo</button>
+                        <button type="button" class="btn btn-ok">Ok</button>
+                    </div>
+                `;
+            } else {
+                // For notice badges, show full info
+                const title = data?.title || 'Thông báo đến hạn';
+                
+                let meta = '';
+                if (data?.start_human && data?.due_human) {
+                    meta = `Từ: ${data.start_human} → Đến hạn: ${data.due_human}`;
+                } else if (data?.due_human) {
+                    meta = `Đến hạn: ${data.due_human}`;
+                } else if (data?.due_at) {
+                    const dueDate = new Date(data.due_at);
+                    if (data?.start_at) {
+                        const startDate = new Date(data.start_at);
+                        meta = `Từ: ${startDate.toLocaleDateString('vi-VN')} → Đến hạn: ${dueDate.toLocaleDateString('vi-VN')}`;
+                    } else {
+                        meta = `Đến hạn: ${dueDate.toLocaleDateString('vi-VN')}`;
+                    }
+                }
+                
+                const msg = data?.message || '(Không có nội dung)';
 
-            box.innerHTML = `
-                <div class="title">${escapeHtml(title)}</div>
-                <div class="meta">${escapeHtml(meta)}</div>
-                <div class="content">${escapeHtml(msg)}</div>
-                <div class="actions">
-                    <button type="button" class="btn btn-off">Tắt Thông Báo</button>
-                    <button type="button" class="btn btn-ok">Ok</button>
-                </div>
-            `;
+                box.innerHTML = `
+                    <div class="title">${escapeHtml(title)}</div>
+                    <div class="meta">${escapeHtml(meta)}</div>
+                    <div class="content">${escapeHtml(msg)}</div>
+                    <div class="actions">
+                        <button type="button" class="btn btn-off">Tắt Thông Báo</button>
+                        <button type="button" class="btn btn-ok">Ok</button>
+                    </div>
+                `;
+            }
 
             // hành vi nút (chỉ hữu dụng ở mode 'action'; ở 'hover' .actions bị CSS ẩn)
             box.querySelector('.btn-ok').addEventListener('click', () => closePreview(true));
@@ -3860,10 +4138,22 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 // dữ liệu
                 const badgeType = badge.dataset.badgeType || 'due';
                 let data = null;
-                try {
-                    data = await getNoticeData(badge.dataset.accountId, badge);
-                } catch (err) {
-                    if (badgeType !== 'anniversary') {
+                
+                // 🔍 For anniversary badge, get data from cache
+                if (badgeType === 'anniversary') {
+                    try {
+                        const raw = badge?.dataset?.anniversaryCache;
+                        if (raw) {
+                            data = JSON.parse(raw);
+                        }
+                    } catch (err) {
+                        console.error('🔍 Error parsing anniversary cache:', err);
+                    }
+                } else {
+                    // For notice badges, fetch from server
+                    try {
+                        data = await getNoticeData(badge.dataset.accountId, badge);
+                    } catch (err) {
                         console.error(err);
                         data = { title: 'Thông báo đến hạn', message: 'Không lấy được nội dung', due_human: '' };
                     }
@@ -3945,6 +4235,273 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
         // viewport thay đổi -> reposition
         window.addEventListener('scroll', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
         window.addEventListener('resize', () => { if ($preview && $badge) placePreview($preview, $badge); }, true);
+    })();
+
+    // ===== CHAT TOOL LOGIC =====
+    (() => {
+        const STORAGE_KEY = 'mxh_chat_words';
+        let chatWords = [];
+
+        // Load từ localStorage
+        function loadChatWords() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    chatWords = JSON.parse(saved);
+                } else {
+                    // Từ mặc định
+                    chatWords = ['hello', 'hi', 'you', 'love', 'xinh', 'good', 'fine', 'chào', 'yêu', 'đẹp', 'ok', 'yes', 'no', 'thank', 'cảm ơn'];
+                    saveChatWords();
+                }
+            } catch (e) {
+                chatWords = ['hello', 'hi', 'you', 'love', 'xinh', 'good', 'fine'];
+                console.error('Error loading chat words:', e);
+            }
+            renderChatWords();
+        }
+
+        // Lưu từ
+        function saveChatWords() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(chatWords));
+            } catch (e) {
+                console.error('Error saving chat words:', e);
+            }
+        }
+
+        // Render danh sách từ
+        function renderChatWords() {
+            const container = document.getElementById('chat-words-container');
+            if (!container) return;
+
+            if (chatWords.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center" style="padding: 2rem 0;">Chưa có từ nào. Nhập từ bên trên để thêm.</p>';
+                return;
+            }
+
+            let html = '<div class="d-flex flex-wrap gap-2">';
+            chatWords.forEach((word, index) => {
+                html += `
+                    <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 10px; cursor: default;">
+                        ${escapeHtml(word)}
+                        <i class="bi bi-x ms-1" style="cursor: pointer;" onclick="removeChatWord(${index})" title="Xóa từ này"></i>
+                    </span>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+
+        // Thêm từ
+        window.addChatWord = function() {
+            const input = document.getElementById('chat-word-input');
+            const word = input.value.trim();
+            
+            if (!word) {
+                if (typeof showToast === 'function') {
+                    showToast('Vui lòng nhập từ!', 'warning');
+                }
+                return;
+            }
+
+            // Kiểm tra trùng lặp
+            if (chatWords.includes(word)) {
+                if (typeof showToast === 'function') {
+                    showToast('Từ này đã tồn tại!', 'warning');
+                }
+                return;
+            }
+
+            chatWords.push(word);
+            saveChatWords();
+            renderChatWords();
+            input.value = '';
+            input.focus();
+
+            if (typeof showToast === 'function') {
+                showToast(`✅ Đã thêm: ${word}`, 'success');
+            }
+        };
+
+        // Xóa từ
+        window.removeChatWord = function(index) {
+            if (index < 0 || index >= chatWords.length) return;
+            
+            const word = chatWords[index];
+            chatWords.splice(index, 1);
+            saveChatWords();
+            renderChatWords();
+
+            if (typeof showToast === 'function') {
+                showToast(`🗑️ Đã xóa: ${word}`, 'info');
+            }
+        };
+
+        // Xóa tất cả từ (mở modal cảnh báo)
+        window.clearAllChatWords = function() {
+            if (chatWords.length === 0) {
+                if (typeof showToast === 'function') {
+                    showToast('Danh sách từ đã trống!', 'warning');
+                }
+                return;
+            }
+
+            // Mở modal cảnh báo
+            const modal = new bootstrap.Modal(document.getElementById('chat-clear-words-confirm-modal'));
+            modal.show();
+        };
+
+        // Xác nhận xóa tất cả từ (sau khi click Xác Nhận Xóa trong modal)
+        window.confirmClearAllChatWords = function() {
+            chatWords = [];
+            saveChatWords();
+            renderChatWords();
+
+            // Đóng modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('chat-clear-words-confirm-modal'));
+            if (modal) modal.hide();
+
+            if (typeof showToast === 'function') {
+                showToast('🗑️ Đã xóa tất cả từ!', 'info');
+            }
+        };
+
+        // Random câu
+        window.randomChatSentence = function() {
+            if (chatWords.length === 0) {
+                if (typeof showToast === 'function') {
+                    showToast('Chưa có từ nào! Thêm từ trước.', 'warning');
+                }
+                return;
+            }
+
+            // Random số từ (1-5)
+            const numWords = Math.floor(Math.random() * 5) + 1; // 1 đến 5
+            const selectedWords = [];
+
+            // Clone mảng để không ảnh hưởng gốc
+            const availableWords = [...chatWords];
+
+            // Chọn random từ
+            for (let i = 0; i < Math.min(numWords, availableWords.length); i++) {
+                const randomIndex = Math.floor(Math.random() * availableWords.length);
+                selectedWords.push(availableWords[randomIndex]);
+                availableWords.splice(randomIndex, 1); // Xóa để không chọn lại
+            }
+
+            // Xáo trộn thứ tự (shuffle)
+            for (let i = selectedWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [selectedWords[i], selectedWords[j]] = [selectedWords[j], selectedWords[i]];
+            }
+
+            // Tạo câu (ngăn cách bởi dấu cách)
+            const sentence = selectedWords.join(' ');
+
+            // Hiển thị kết quả
+            const resultText = document.getElementById('chat-result-text');
+            if (resultText) {
+                resultText.textContent = sentence;
+            }
+
+            // Tự động copy vào clipboard
+            copyToClipboard(sentence);
+
+            if (typeof showToast === 'function') {
+                showToast(`📋 Đã copy: ${sentence}`, 'success');
+            }
+        };
+
+        // Copy to clipboard helper
+        window.copyToClipboard = function(text) {
+            if (!text) return;
+            
+            // Method 1: Modern API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    if (typeof showToast === 'function') {
+                        showToast('📋 Đã copy!', 'success');
+                    }
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                });
+            } else {
+                // Method 2: Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    if (typeof showToast === 'function') {
+                        showToast('📋 Đã copy!', 'success');
+                    }
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+                document.body.removeChild(textarea);
+            }
+        };
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load data khi mở modal
+            const chatModal = document.getElementById('mxh-chat-tool-modal');
+            if (chatModal) {
+                chatModal.addEventListener('show.bs.modal', () => {
+                    loadChatWords();
+                });
+            }
+
+            // Button: Thêm từ
+            const addBtn = document.getElementById('chat-add-word-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', addChatWord);
+            }
+
+            // Input: Enter để thêm từ
+            const wordInput = document.getElementById('chat-word-input');
+            if (wordInput) {
+                wordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addChatWord();
+                    }
+                });
+            }
+
+            // Button: Random (bên phải)
+            const randomBtnRight = document.getElementById('chat-random-btn-right');
+            if (randomBtnRight) {
+                randomBtnRight.addEventListener('click', randomChatSentence);
+            }
+
+            // Button: Xóa tất cả từ
+            const clearBtn = document.getElementById('chat-clear-words-btn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearAllChatWords);
+            }
+
+            // Button: Xác nhận xóa tất cả từ (trong modal)
+            const confirmClearBtn = document.getElementById('confirm-clear-words-btn');
+            if (confirmClearBtn) {
+                confirmClearBtn.addEventListener('click', confirmClearAllChatWords);
+            }
+
+            // Click vào result box để copy
+            const resultBox = document.getElementById('chat-result-box');
+            if (resultBox) {
+                resultBox.addEventListener('click', () => {
+                    const text = document.getElementById('chat-result-text')?.textContent;
+                    if (text && text !== 'Nhấn Random để tạo câu...') {
+                        copyToClipboard(text);
+                    }
+                });
+            }
+        });
     })();
 
 </script>

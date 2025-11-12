@@ -1,0 +1,108 @@
+🧩 CẤU HÌNH MIKROTIK – PHÂN 4 MẠNG RIÊNG (CHO 4 WIFI RIÊNG)
+
+Thiết bị: Mini PC N5095 (RouterOS v7.12.1)
+Mục tiêu: Tạo 4 route riêng biệt – mỗi SSID trên Redmi AX6 (OpenWRT) sẽ ra 1 IP WAN khác nhau.
+
+⚙️ 1️⃣ Cổng vật lý & kết nối thực tế
+Cổng	Thiết bị nối	Mô tả
+ether4	Cổng ONS (nhà mạng)	PPPoE (WAN tổng)
+ether3	Router Redmi AX6 (OpenWRT)	LAN ra OpenWRT (giao tiếp VLAN)
+ether2 / ether1	Dự phòng	Không dùng hiện tại
+🌐 2️⃣ PPPoE Clients (4 phiên riêng biệt)
+
+Tạo 4 PPPoE client để nhận 4 IP động riêng từ nhà mạng:
+
+Name	Interface	Tình trạng	Ghi chú
+pppoe-out1	ether4	Connected	IP riêng #1
+pppoe-out2	ether4	Connected	IP riêng #2
+pppoe-out3	ether4	Connected	IP riêng #3
+pppoe-out4	ether4	Connected	IP riêng #4
+
+⚠️ Mỗi PPPoE client dùng chung user/pass nhà mạng, RouterOS tự chia session động.
+“Status: connected” có IP local và remote riêng.
+
+🧱 3️⃣ VLAN nội bộ (giao tiếp OpenWRT)
+
+Tạo 4 VLAN trên cổng LAN nối OpenWRT (ether3):
+
+VLAN Name	VLAN ID	Interface	Mục đích
+vlan10	10	ether3	Cho Wi-Fi 1
+vlan20	20	ether3	Cho Wi-Fi 2
+vlan30	30	ether3	Cho Wi-Fi 3
+vlan40	40	ether3	Cho Wi-Fi 4
+🪜 4️⃣ Bridge tương ứng cho mỗi VLAN
+
+Tạo 4 bridge, mỗi bridge gắn 1 VLAN tương ứng:
+
+Bridge	Interface gắn	IP nội bộ	Mục đích
+bridge10	vlan10	192.168.10.1/24	Wi-Fi 1
+bridge20	vlan20	192.168.20.1/24	Wi-Fi 2
+bridge30	vlan30	192.168.30.1/24	Wi-Fi 3
+bridge40	vlan40	192.168.40.1/24	Wi-Fi 4
+📦 5️⃣ DHCP Server nội bộ (phát IP cho từng VLAN)
+
+Mỗi bridge có DHCP riêng:
+
+Interface	Pool	Range
+bridge10	dhcp_pool1	192.168.10.100–200
+bridge20	dhcp_pool2	192.168.20.100–200
+bridge30	dhcp_pool3	192.168.30.100–200
+bridge40	dhcp_pool4	192.168.40.100–200
+🔁 6️⃣ NAT – ánh xạ 4 WAN riêng
+
+Tạo 4 rule NAT (masquerade) cho từng PPPoE:
+
+/ip firewall nat
+add chain=srcnat out-interface=pppoe-out1 action=masquerade
+add chain=srcnat out-interface=pppoe-out2 action=masquerade
+add chain=srcnat out-interface=pppoe-out3 action=masquerade
+add chain=srcnat out-interface=pppoe-out4 action=masquerade
+
+🧭 7️⃣ Routing Table riêng cho từng VLAN
+
+Tạo 4 routing table mới:
+
+/routing table
+add name=route10 fib
+add name=route20 fib
+add name=route30 fib
+add name=route40 fib
+
+
+Và thêm route mặc định tương ứng:
+
+/ip route
+add dst-address=0.0.0.0/0 gateway=pppoe-out1 routing-table=route10
+add dst-address=0.0.0.0/0 gateway=pppoe-out2 routing-table=route20
+add dst-address=0.0.0.0/0 gateway=pppoe-out3 routing-table=route30
+add dst-address=0.0.0.0/0 gateway=pppoe-out4 routing-table=route40
+
+🧩 8️⃣ Mangle rules (đánh dấu định tuyến)
+/ip firewall mangle
+add chain=prerouting src-address=192.168.10.0/24 action=mark-routing new-routing-mark=route10 passthrough=yes comment="WiFi 1"
+add chain=prerouting src-address=192.168.20.0/24 action=mark-routing new-routing-mark=route20 passthrough=yes comment="WiFi 2"
+add chain=prerouting src-address=192.168.30.0/24 action=mark-routing new-routing-mark=route30 passthrough=yes comment="WiFi 3"
+add chain=prerouting src-address=192.168.40.0/24 action=mark-routing new-routing-mark=route40 passthrough=yes comment="WiFi 4"
+
+📶 9️⃣ Kết nối với OpenWRT (Redmi AX6)
+
+Cắm dây LAN từ ether3 (Mikrotik) → LAN1 (Redmi AX6)
+
+Trên AX6: tạo các interface VLAN (eth0.10, .20, .30, .40) với IP:
+
+192.168.10.2
+
+192.168.20.2
+
+192.168.30.2
+
+192.168.40.2
+
+Gateway & DNS để trống (do Mikrotik cấp).
+
+🔍 10️⃣ Kết quả mong đợi
+Wi-Fi trên OpenWRT	VLAN	Dải IP	Ra WAN
+WiFi1	VLAN10	192.168.10.x	pppoe-out1
+WiFi2	VLAN20	192.168.20.x	pppoe-out2
+WiFi3	VLAN30	192.168.30.x	pppoe-out3
+WiFi4	VLAN40	192.168.40.x	pppoe-out4

@@ -399,7 +399,7 @@ def update_account(account_id):
         # --- Update mxh_accounts table ---
         account_fields = {}
         allowed_account_fields = [
-            "username", "phone", "wechat_created_day", "wechat_created_month",
+            "username", "phone", "email", "wechat_created_day", "wechat_created_month",
             "wechat_created_year", "status", "muted_until", "wechat_status", "die_date", "disabled_date"
         ]
         
@@ -407,11 +407,16 @@ def update_account(account_id):
             if field in data:
                 account_fields[field] = data[field]
         
+        print(f"🔍 Account fields to update: {account_fields}")
+        
         if account_fields:
             account_fields["updated_at"] = now
             set_clause = ", ".join([f"{key} = ?" for key in account_fields.keys()])
             params = list(account_fields.values()) + [account_id]
-            conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", params)
+            sql = f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?"
+            print(f"🔍 SQL: {sql}")
+            print(f"🔍 Params: {params}")
+            conn.execute(sql, params)
 
         # --- Update mxh_cards table (for card_name) ---
         if "card_name" in data:
@@ -423,7 +428,10 @@ def update_account(account_id):
         conn.commit()
         
         updated_account = conn.execute("SELECT a.*, c.card_name, c.platform, c.group_id FROM mxh_accounts a JOIN mxh_cards c ON a.card_id = c.id WHERE a.id = ?", (account_id,)).fetchone()
-        return jsonify(dict(updated_account))
+        result = dict(updated_account)
+        print(f"🔍 Returning updated account: {result}")
+        print(f"🔍 Email in result: {result.get('email', 'NOT FOUND')}")
+        return jsonify(result)
 
     except Exception as e:
         conn.rollback()
