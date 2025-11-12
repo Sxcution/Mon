@@ -312,13 +312,22 @@ def update_account_direct(account_id):
             "status", "username", "phone", "url", "login_username", "login_password",
             "account_name", "wechat_created_day", "wechat_created_month", "wechat_created_year",
             "wechat_status", "die_date", "disabled_date", "wechat_scan_count", "wechat_last_scan_date",
-            "rescue_count", "rescue_success_count", "email_reset_date", "notice", "muted_until"
+            "rescue_count", "rescue_success_count", "email_reset_date", "notice", "muted_until",
+            "email"  # Thêm trường email để cho phép cập nhật email từ modal WeChat
         }
+        
+        # 🔍 Debug: Kiểm tra dữ liệu nhận được từ frontend
+        print(f"🔍 [update_account_direct] Received data: {data}")
+        print(f"🔍 [update_account_direct] Email in data: {data.get('email', 'NOT FOUND')}")
         
         updates = {}
         for field in allowed_fields:
             if field in data:
                 updates[field] = data[field]
+        
+        # 🔍 Debug: Kiểm tra các trường sẽ được cập nhật
+        print(f"🔍 [update_account_direct] Fields to update: {list(updates.keys())}")
+        print(f"🔍 [update_account_direct] Email in updates: {updates.get('email', 'NOT FOUND')}")
         
         # Update card_name if provided
         if card_name is not None:
@@ -339,7 +348,12 @@ def update_account_direct(account_id):
             set_clause = ", ".join([f"{k} = ?" for k in updates.keys()])
             values = list(updates.values()) + [account_id]
             
-            conn.execute(f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?", values)
+            # 🔍 Debug: Kiểm tra SQL query và giá trị
+            sql_query = f"UPDATE mxh_accounts SET {set_clause} WHERE id = ?"
+            print(f"🔍 [update_account_direct] SQL: {sql_query}")
+            print(f"🔍 [update_account_direct] Values: {values}")
+            
+            conn.execute(sql_query, values)
         
         conn.commit()
         
@@ -351,8 +365,11 @@ def update_account_direct(account_id):
             WHERE a.id = ?
         """, (account_id,)).fetchone()
         
+        # 🔍 Debug: Kiểm tra kết quả sau khi cập nhật
         if updated:
-            return jsonify(dict(updated))
+            updated_dict = dict(updated)
+            print(f"🔍 [update_account_direct] Updated account email: {updated_dict.get('email', 'NOT FOUND')}")
+            return jsonify(updated_dict)
         return jsonify({"error": "Account not found after update"}), 404
         
     except Exception as e:
