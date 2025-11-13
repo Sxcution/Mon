@@ -10,6 +10,15 @@
             <!-- Groups will be rendered here by JavaScript -->
         </div>
 
+        <!-- Search bar in the middle -->
+        <div class="flex-grow-1 mx-3" style="min-width: 250px; max-width: 450px;">
+            <div class="input-group input-group-sm" id="mxh-search-group">
+                <span class="input-group-text" id="mxh-search-icon"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="mxh-search-input" placeholder="Tìm tên, SĐT, email, số card..." aria-label="Tìm kiếm">
+                <button class="btn btn-outline-secondary" type="button" id="mxh-search-clear" style="display: none;"><i class="bi bi-x-lg"></i></button>
+            </div>
+        </div>
+
         <!-- Action buttons on the right -->
         <div class="d-flex gap-2 align-items-center flex-wrap">
             <div class="btn-group">
@@ -698,6 +707,145 @@
         border: 1px solid transparent;
         color: #fff;
     }
+
+    /* ========================================
+   🔍 SEARCH BAR NEON STYLE
+   ======================================== */
+    
+    /* Search input group - Đảm bảo border nối liền */
+    #mxh-search-group.input-group,
+    #mxh-search-group {
+        border-radius: 0 !important;
+        overflow: visible !important;
+        position: relative !important;
+    }
+    
+    /* Override Bootstrap input-group styles */
+    #mxh-search-group.input-group > * {
+        border-radius: 0 !important;
+    }
+
+    /* Search input - Base style */
+    #mxh-search-input {
+        background-color: #1e1e1e !important;
+        border: none !important;
+        border-top: 2px solid #2a2a2a !important;
+        border-bottom: 2px solid #2a2a2a !important;
+        border-right: 2px solid #2a2a2a !important; /* Luôn có border phải mặc định */
+        border-left: none !important;
+        border-radius: 0 !important;
+        color: #eee !important;
+        transition: all 0.3s ease !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Khi clear button hiển thị (class has-clear-button), input không có border phải */
+    #mxh-search-group.has-clear-button #mxh-search-input {
+        border-right: none !important;
+    }
+
+    /* Search icon container - Base style */
+    #mxh-search-icon {
+        background-color: #1e1e1e !important;
+        border: none !important;
+        border-top: 2px solid #2a2a2a !important;
+        border-bottom: 2px solid #2a2a2a !important;
+        border-left: 2px solid #2a2a2a !important;
+        border-right: none !important;
+        border-radius: 0 !important;
+        color: #888 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: none !important;
+    }
+
+    /* Clear button - Base style - Đảm bảo có đủ viền, đặc biệt là border-right */
+    #mxh-search-clear.btn,
+    #mxh-search-clear,
+    #mxh-search-group .btn#mxh-search-clear {
+        border: none !important;
+        border-top: 2px solid #2a2a2a !important;
+        border-bottom: 2px solid #2a2a2a !important;
+        border-right: 2px solid #2a2a2a !important;
+        border-left: none !important;
+        border-radius: 0 !important;
+        background-color: #1e1e1e !important;
+        color: #888 !important;
+        transition: all 0.3s ease !important;
+        padding: 0.25rem 0.5rem !important;
+        min-width: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+    }
+
+    /* Đảm bảo clear button luôn có border-right khi hiển thị */
+    #mxh-search-clear:not([style*="display: none"]),
+    #mxh-search-clear[style*="display: block"],
+    #mxh-search-group.has-clear-button #mxh-search-clear {
+        border-right: 2px solid #2a2a2a !important;
+    }
+
+    /* Input group khi focus - Viền xanh đơn giản, không có glow */
+    #mxh-search-group:focus-within #mxh-search-icon {
+        border-top: 2px solid #00b8d4 !important;
+        border-bottom: 2px solid #00b8d4 !important;
+        border-left: 2px solid #00b8d4 !important;
+        border-right: none !important;
+        background-color: #1e1e1e !important;
+        color: #00b8d4 !important;
+        box-shadow: none !important;
+    }
+
+    /* Input khi focus - Có clear button: không có border phải */
+    #mxh-search-group:focus-within.has-clear-button #mxh-search-input {
+        border-top: 2px solid #00b8d4 !important;
+        border-bottom: 2px solid #00b8d4 !important;
+        border-left: none !important;
+        border-right: none !important;
+        outline: none !important;
+        background-color: #1e1e1e !important;
+        box-shadow: none !important;
+    }
+
+    /* Input khi focus - KHÔNG có clear button: có border phải */
+    #mxh-search-group:focus-within:not(.has-clear-button) #mxh-search-input {
+        border-top: 2px solid #00b8d4 !important;
+        border-bottom: 2px solid #00b8d4 !important;
+        border-left: none !important;
+        border-right: 2px solid #00b8d4 !important;
+        outline: none !important;
+        background-color: #1e1e1e !important;
+        box-shadow: none !important;
+    }
+
+    /* Clear button khi focus - Viền xanh đơn giản */
+    #mxh-search-group:focus-within.has-clear-button #mxh-search-clear,
+    #mxh-search-group:focus-within #mxh-search-clear.btn,
+    #mxh-search-group:focus-within #mxh-search-clear {
+        border-top: 2px solid #00b8d4 !important;
+        border-bottom: 2px solid #00b8d4 !important;
+        border-right: 2px solid #00b8d4 !important;
+        border-left: none !important;
+        border-radius: 0 !important;
+        background-color: #1e1e1e !important;
+        color: #00b8d4 !important;
+        box-shadow: none !important;
+    }
+
+    /* Clear button khi hover - Viền xanh nhẹ hơn */
+    #mxh-search-clear:hover,
+    #mxh-search-clear.btn:hover {
+        border-top: 2px solid #00b8d4 !important;
+        border-bottom: 2px solid #00b8d4 !important;
+        border-right: 2px solid #00b8d4 !important;
+        border-left: none !important;
+        border-radius: 0 !important;
+        background-color: #1e1e1e !important;
+        color: #00b8d4 !important;
+        box-shadow: none !important;
+    }
 </style>
 
 <!-- MXH Background Context Menu -->
@@ -755,6 +903,7 @@
     let activeFilter = 'default'; // THÊM DÒNG NÀY
     let activeViewFilter = 'default'; // 🔍 Thêm biến này để lưu bộ lọc "Xem"
     let lastUpdateTime = null; // NEW: Store the timestamp of the last successful data load // null = show all groups, otherwise show specific group only
+    let mxhSearchQuery = ''; // 🔍 THÊM DÒNG NÀY: Lưu từ khóa tìm kiếm
 
     // NEW: Card States Management (cardId => { activeAccountId, isFlipped })
     // State chỉ lưu trong memory, không persist qua reload
@@ -1809,10 +1958,52 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             });
         });
 
+        // ===== 🔍 START: LỌC TÌM KIẾM =====
+        const searchQuery = mxhSearchQuery.toLowerCase().trim();
+        let processedCardGroups = cardGroups; // Mặc định là tất cả card đã lọc
+
+        if (searchQuery) {
+            processedCardGroups = {}; // Tạo object mới chứa kết quả tìm kiếm
+            
+            for (const [cardId, accounts] of Object.entries(cardGroups)) {
+                let matchingAccount = null;
+
+                // Lặp qua TẤT CẢ tài khoản (chính + phụ) trong card
+                for (const acc of accounts) {
+                    // Lấy các trường để tìm kiếm, đảm bảo không bị lỗi nếu null
+                    const cardName = (acc.card_name || '').toLowerCase();
+                    const username = (acc.username || '').toLowerCase();
+                    const phone = (acc.phone || '').toLowerCase();
+                    const email = (acc.email || '').toLowerCase();
+                    const loginUser = (acc.login_username || '').toLowerCase();
+
+                    // Kiểm tra xem có khớp không
+                    if (cardName.includes(searchQuery) ||
+                        username.includes(searchQuery) ||
+                        phone.includes(searchQuery) ||
+                        email.includes(searchQuery) ||
+                        loginUser.includes(searchQuery)) 
+                    {
+                        matchingAccount = acc; // Đã tìm thấy tài khoản khớp
+                        break; // Dừng lặp các tài khoản phụ khác
+                    }
+                }
+
+                // Nếu tìm thấy tài khoản khớp trong card này
+                if (matchingAccount) {
+                    processedCardGroups[cardId] = accounts; // Giữ lại card này
+                    
+                    // 🌟 YÊU CẦU 2: Lật đến đúng tài khoản phụ
+                    setCardState(Number(cardId), { activeAccountId: matchingAccount.id });
+                }
+            }
+        }
+        // ===== 🔍 END: LỌC TÌM KIẾM =====
+
         // === 2. APPLY SORTING (SẮP XẾP) ===
 
         // Sắp xếp MẶC ĐỊNH: theo card_name (số)
-        let sortedCards = Object.entries(cardGroups).sort(([, accountsA], [, accountsB]) => {
+        let sortedCards = Object.entries(processedCardGroups).sort(([, accountsA], [, accountsB]) => {
             const nameA = parseInt(accountsA[0].card_name, 10) || Infinity;
             const nameB = parseInt(accountsB[0].card_name, 10) || Infinity;
             return nameA - nameB;
@@ -1842,6 +2033,31 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             });
         }
 
+        // 🔍 THÊM ĐIỀU KIỆN NÀY: Kiểm tra khi tìm kiếm không có kết quả
+        if (sortedCards.length === 0) {
+            let emptyMessage = 'Chưa có tài khoản MXH nào';
+            let emptySubMessage = 'Nhấn "Thêm Tài Khoản MXH" để bắt đầu.';
+
+            // 🔍 THÊM ĐIỀU KIỆN NÀY: Hiển thị thông báo khi tìm kiếm
+            const currentSearchQuery = mxhSearchQuery.toLowerCase().trim();
+            if (currentSearchQuery) {
+                emptyMessage = 'Không tìm thấy kết quả';
+                emptySubMessage = `Không có tài khoản nào khớp với từ khóa "${escapeHtml(currentSearchQuery)}"`;
+            } else if (activeFilter !== 'default' || activeGroupId !== null) {
+                emptyMessage = 'Không có tài khoản nào';
+                emptySubMessage = 'Không tìm thấy tài khoản nào khớp với bộ lọc/nhóm hiện tại.';
+            }
+
+            container.innerHTML = `
+            <div class="text-center text-muted" style="padding: 5rem 1rem;">
+                <i class="bi bi-share-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h5 class="mt-3">${emptyMessage}</h5>
+                <p>${emptySubMessage}</p>
+            </div>
+        `;
+            isRendering = false;
+            return;
+        }
 
         // === Batch Render Cards (sử dụng sortedCards đã được lọc và sắp xếp) ===
         const BATCH = MXH_CONFIG.RENDER_BATCH_SIZE || 50;
@@ -3259,7 +3475,44 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 scheduleRender();
             });
         }
-        // ===== THÊM VÀO ĐẾN ĐÂY =====
+
+        // ===== 🔍 START: Xử lý sự kiện cho Thanh Tìm Kiếm =====
+        const searchInput = document.getElementById('mxh-search-input');
+        const clearButton = document.getElementById('mxh-search-clear');
+        const searchGroup = document.getElementById('mxh-search-group');
+
+        if (searchInput && clearButton && searchGroup) {
+            // Hàm xử lý tìm kiếm
+            const handleSearch = (event) => {
+                const query = event.target.value;
+                mxhSearchQuery = query; // Cập nhật biến global
+                
+                // Hiển thị/ẩn nút clear và thêm/xóa class
+                if (query) {
+                    clearButton.style.display = 'block';
+                    searchGroup.classList.add('has-clear-button');
+                } else {
+                    clearButton.style.display = 'none';
+                    searchGroup.classList.remove('has-clear-button');
+                }
+                
+                // Lên lịch render lại
+                scheduleRender();
+            };
+
+            // Dùng debounce (đã có sẵn) để tránh lag
+            searchInput.addEventListener('input', debounce(handleSearch, 250));
+
+            // Xử lý nút Xóa
+            clearButton.addEventListener('click', () => {
+                searchInput.value = '';
+                mxhSearchQuery = '';
+                clearButton.style.display = 'none';
+                searchGroup.classList.remove('has-clear-button');
+                scheduleRender();
+            });
+        }
+        // ===== 🔍 END: Xử lý sự kiện cho Thanh Tìm Kiếm =====
 
         // ===== MXH BACKGROUND CONTEXT MENU (Click chuột phải vào nền) =====
         document.getElementById('mxh-tool-pane').addEventListener('contextmenu', function (event) {
