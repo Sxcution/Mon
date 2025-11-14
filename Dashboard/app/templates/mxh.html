@@ -1528,7 +1528,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             const years = Math.floor(totalDays / 365);
             const months = Math.floor((totalDays % 365) / 30);
             return {
-                display: `${years}năm ${months}th`,
+                display: `${years}N ${months}th`,
                 color: '#07c160'
             };
         } else if (totalDays >= 30) {
@@ -2558,10 +2558,21 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 console.log('🔍 New account created:', newAccount);
                 console.log('🔍 New account full data:', JSON.stringify(newAccount, null, 2));
                 
+                // 🔍 Merge dữ liệu mới vào mxhAccounts ngay lập tức để badge có thể tính toán
+                const existingIndex = mxhAccounts.findIndex(a => a.id === newAccount.id);
+                if (existingIndex >= 0) {
+                    mxhAccounts[existingIndex] = newAccount;
+                } else {
+                    mxhAccounts.push(newAccount);
+                }
+                
                 // 🔍 Reload all data to ensure consistency and get full card info
                 await loadMXHData(true);
                 
                 console.log('🔍 Data reloaded, mxhAccounts count:', mxhAccounts.length);
+                
+                // 🔍 Gọi render lại ngay để badge được cập nhật
+                scheduleRender();
                 
                 // Wait a bit more for render to complete, then flip to new account
                 setTimeout(() => {

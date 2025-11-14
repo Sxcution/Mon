@@ -383,13 +383,27 @@ def mxh_create_sub_account(card_id):
     """POST /mxh/api/cards/<card_id>/accounts - tạo account con"""
     conn = get_db_connection()
     try:
+        data = request.get_json() or {}
         now_iso = datetime.now().isoformat()
+        
+        # 🔍 Nhận các trường wechat_created_* từ request body
+        wechat_created_day = data.get("wechat_created_day")
+        wechat_created_month = data.get("wechat_created_month")
+        wechat_created_year = data.get("wechat_created_year")
+        
+        # 🔍 Lưu đầy đủ các trường wechat_created_* vào database
         cursor = conn.execute(
-            "INSERT INTO mxh_accounts (card_id, is_primary, created_at, updated_at, account_name) VALUES (?, 0, ?, ?, ?)",
-            (card_id, now_iso, now_iso, "Tài khoản phụ"),
+            """INSERT INTO mxh_accounts 
+               (card_id, is_primary, created_at, updated_at, account_name, 
+                wechat_created_day, wechat_created_month, wechat_created_year) 
+               VALUES (?, 0, ?, ?, ?, ?, ?, ?)""",
+            (card_id, now_iso, now_iso, "Tài khoản phụ", 
+             wechat_created_day, wechat_created_month, wechat_created_year),
         )
         sub_account_id = cursor.lastrowid
         conn.commit()
+        
+        # 🔍 Trả về đầy đủ thông tin account bao gồm created_at và wechat_created_*
         new_sub = conn.execute(
             "SELECT * FROM mxh_accounts WHERE id = ?", (sub_account_id,)
         ).fetchone()
