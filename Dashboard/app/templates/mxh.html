@@ -174,8 +174,7 @@
                         <label class="form-label mb-10">Trạng Thái</label>
                         <select class="form-select form-select-sm" id="wechat-status" required style="width: 100%;">
                             <option value="active">Available</option>
-                            <option value="disabled">Vô hiệu hóa</option>
-                            <option value="die">Die</option>
+                            <option value="disabled">Die</option>
                         </select>
                     </div>
                 </div>
@@ -1682,10 +1681,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
 
         // Determine status icon
         let statusIcon = '';
-        if (account.status === 'die') {
+        if (account.status === 'disabled') {
             statusIcon = '<i class="bi bi-x-circle-fill status-icon" style="color: #dc3545;"></i>';
-        } else if (account.status === 'disabled') {
-            statusIcon = '<i class="bi bi-slash-circle status-icon" style="color: #ff8c00;"></i>';
         }
 
         // === Thông báo logic (từ MXH OLD) ===
@@ -1735,7 +1732,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             console.error('Error parsing notice:', e);
         }
 
-        // ===== Hiển thị khi disabled ======
+        // ===== Hiển thị khi disabled (Die UI) ======
         let disabledInfo = '';
         const isDisabled = account.status === 'disabled';
         if (isDisabled && platform === 'wechat') {
@@ -1749,8 +1746,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             disabledInfo = `
                 <div style="font-size: 0.75rem; margin-top: 4px;">
                     <div class="d-flex align-items-center justify-content-between">
-                        <small class="text-warning">Ngày: ${disableDays}</small>
-                        <small>Lượt cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
+                        <small class="text-danger">Die: ${disableDays} ngày</small>
+                        <small>Cứu: <span class="text-danger">${account.rescue_count || 0}</span>-<span class="text-success">${account.rescue_success_count || 0}</span></small>
                     </div>
                 </div>
             `;
@@ -2123,13 +2120,8 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     function getAccountBorderClass(account) {
         const status = String(account.status || '').toLowerCase();
 
-        // Disabled = màu cam
+        // Disabled (hiển thị là Die) = màu đỏ
         if (status === 'disabled') {
-            return 'mxh-border-orange';
-        }
-
-        // Die = màu đỏ
-        if (status === 'die' || !!account.die_date) {
             return 'mxh-border-red';
         }
 
@@ -2300,10 +2292,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                             <div class="mxh-menu-item" data-action="rescue-success">Được Cứu</div>
                             <div class="mxh-menu-item" data-action="rescue-failed">Cứu Thất Bại</div>
                         ` : `
-                            <!-- Khi chưa disabled, hiển thị 3 trạng thái bình thường -->
+                            <!-- Khi chưa disabled, hiển thị 2 trạng thái (Active/Die mới) -->
                             <div class="mxh-menu-item" data-action="status-active">${currentStatus === 'active' ? '✓ ' : ''}Active</div>
-                            <div class="mxh-menu-item" data-action="status-disabled">Disabled</div>
-                            <div class="mxh-menu-item" data-action="status-die">${currentStatus === 'die' ? '✓ ' : ''}Die</div>
+                            <div class="mxh-menu-item" data-action="status-disabled">Die</div>
                         `}
                     </div>
                 </div>
@@ -2461,10 +2452,9 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
                 await createSubAccount(currentContextCardId);
                 hideCardContextMenu();
             }
-        } else if (action === 'status-active' || action === 'status-die') {
-            const newStatus = action.replace('status-', '');
+        } else if (action === 'status-active') {
             if (currentContextAccountId) {
-                await updateAccountStatusNew(currentContextAccountId, newStatus);
+                await updateAccountStatusNew(currentContextAccountId, 'active');
                 hideCardContextMenu();
             }
         } else if (action === 'status-disabled') {
@@ -2735,21 +2725,17 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
     }
 
 
-    // === NEW: Update Account Status với die_date persist ===
+    // === NEW: Update Account Status (Disabled = Die UI) ===
     async function updateAccountStatusNew(accountId, status) {
         try {
             const payload = { status };
 
-            // 🔍 If status is die, set die_date
-            if (status === 'die') {
-                payload.die_date = new Date().toISOString().split('T')[0];
-                payload.disabled_date = null;
-            } else if (status === 'disabled') {
-                // If status is disabled, set disabled_date
+            // 🔍 Disabled (Die UI) ghi nhận ngày disabled, clear die_date cũ
+            if (status === 'disabled') {
                 payload.disabled_date = new Date().toISOString().split('T')[0];
                 payload.die_date = null;
             } else {
-                // For active status, clear both dates
+                // Active: clear cả die_date/disabled_date
                 payload.die_date = null;
                 payload.disabled_date = null;
             }
@@ -3147,7 +3133,7 @@ ${badgeInfo.noticeExpired > 0 ? `• ${badgeInfo.noticeExpired} thông báo hế
             wechat_created_day: day,
             wechat_created_month: month,
             wechat_created_year: year,
-            status: selectedStatus,  // Keep the status as-is: 'active', 'disabled', or 'die'
+            status: selectedStatus,  // Status chỉ còn 'active' hoặc 'disabled'
             wechat_status: selectedStatus
         };
 
